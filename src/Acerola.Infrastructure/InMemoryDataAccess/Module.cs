@@ -12,7 +12,7 @@ public class Module : Autofac.Module
 
         // Register all Types in InMemoryDataAccess namespace
         builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
-            .Where(type => type.Namespace.Contains("InMemoryDataAccess"))
+            .Where(type => type.Namespace?.Contains("InMemoryDataAccess") == true)
             .AsImplementedInterfaces()
             .InstancePerLifetimeScope();
     }

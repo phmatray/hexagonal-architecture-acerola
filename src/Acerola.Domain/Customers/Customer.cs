@@ -5,14 +5,7 @@ public sealed class Customer : IAggregateRoot
     public Guid Id { get; private set; }
     public Name Name { get; private set; }
     public SSN SSN { get; private set; }
-    public IReadOnlyCollection<Guid> Accounts
-    {
-        get
-        {
-            IReadOnlyCollection<Guid> readOnly = _accounts.GetAccountIds();
-            return readOnly;
-        }
-    }
+    public IReadOnlyCollection<Guid> Accounts => _accounts.GetAccountIds();
 
     private AccountCollection _accounts;
 

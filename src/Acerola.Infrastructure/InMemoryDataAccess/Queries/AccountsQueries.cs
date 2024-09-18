@@ -15,7 +15,7 @@ public class AccountsQueries(Context context)
 
         if (data == null)
         {
-            throw new AccountNotFoundException($"The account {accountId} does not exists or is not processed yet.");
+            throw new AccountNotFoundException(accountId);
         }
 
         List<ITransaction> credits = data

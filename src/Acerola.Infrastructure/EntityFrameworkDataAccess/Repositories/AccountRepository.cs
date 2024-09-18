@@ -50,6 +50,11 @@ public class AccountRepository(Context context)
         Entities.Account? account = await _context
             .Accounts
             .FindAsync(id);
+        
+        if (account == null)
+        {
+            return null;
+        }
 
         List<Entities.Credit> credits = await _context
             .Credits

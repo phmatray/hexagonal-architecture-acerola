@@ -1,8 +1,4 @@
 ﻿namespace Acerola.Infrastructure;
 
-public class AccountNotFoundException : InfrastructureException
-{
-    internal AccountNotFoundException(string message)
-        : base(message)
-    { }
-}
+public class AccountNotFoundException(Guid accountId)
+    : InfrastructureException($"The account {accountId} does not exists or is not processed yet.");

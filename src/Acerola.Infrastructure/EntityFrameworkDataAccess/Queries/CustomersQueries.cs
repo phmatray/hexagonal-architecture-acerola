@@ -21,7 +21,7 @@ public class CustomersQueries(Context context, IAccountsQueries accountsQueries)
 
         if (customer == null)
         {
-            throw new CustomerNotFoundException($"The customer {customerId} does not exists or is not processed yet.");
+            throw new CustomerNotFoundException(customerId);
         }
 
         List<AccountResult> accountsResult = [];

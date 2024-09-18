@@ -2,21 +2,21 @@
 
 public sealed class Account : IAggregateRoot
 {
-    public Guid Id { get; private set; }
-    public Guid CustomerId { get; private set; }
-    public IReadOnlyCollection<ITransaction> GetTransactions()
-    {
-        IReadOnlyCollection<ITransaction> readOnly = _transactions.GetTransactions();
-        return readOnly;
-    }
-
     private TransactionCollection _transactions;
 
+    public Guid Id { get; private set; }
+    public Guid CustomerId { get; private set; }
+    
     public Account(Guid customerId)
     {
         Id = Guid.NewGuid();
         _transactions = new TransactionCollection();
         CustomerId = customerId;
+    }
+    
+    public IReadOnlyCollection<ITransaction> GetTransactions()
+    {
+        return _transactions.GetTransactions();
     }
 
     public void Deposit(Amount amount)
@@ -52,8 +52,7 @@ public sealed class Account : IAggregateRoot
 
     public ITransaction GetLastTransaction()
     {
-        ITransaction transaction = _transactions.GetLastTransaction();
-        return transaction;
+        return _transactions.GetLastTransaction();
     }
 
     private Account() { }
