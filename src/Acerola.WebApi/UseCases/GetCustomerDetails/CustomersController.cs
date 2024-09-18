@@ -1,66 +1,56 @@
-﻿namespace Acerola.WebApi.UseCases.GetCustomerDetails
+﻿using Acerola.Application.Queries;
+using Acerola.Application.Results;
+using Acerola.WebApi.Model;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Acerola.WebApi.UseCases.GetCustomerDetails;
+
+[Route("api/[controller]")]
+public sealed class CustomersController(ICustomersQueries customersQueries)
+    : Controller
 {
-    using Acerola.Application.Queries;
-    using Acerola.Application.Results;
-    using Microsoft.AspNetCore.Mvc;
-    using System;
-    using System.Threading.Tasks;
-    using Acerola.WebApi.Model;
-    using System.Collections.Generic;
-
-    [Route("api/[controller]")]
-    public sealed class CustomersController : Controller
+    /// <summary>
+    /// Get a Customer details 
+    /// </summary>
+    [HttpGet("{customerId}", Name = "GetCustomer")]
+    public async Task<IActionResult> GetCustomer(Guid customerId)
     {
-        private readonly ICustomersQueries customersQueries;
+        CustomerResult? customer = await customersQueries.GetCustomer(customerId);
 
-        public CustomersController(ICustomersQueries customersQueries)
+        if (customer == null)
         {
-            this.customersQueries = customersQueries;
+            return new NoContentResult();
         }
 
-        /// <summary>
-        /// Get a Customer details 
-        /// </summary>
-        [HttpGet("{customerId}", Name = "GetCustomer")]
-        public async Task<IActionResult> GetCustomer(Guid customerId)
+        List<AccountDetailsModel> accounts = [];
+
+        foreach (var account in customer.Accounts)
         {
-            CustomerResult customer = await customersQueries.GetCustomer(customerId);
+            List<TransactionModel> transactions = [];
 
-            if (customer == null)
+            foreach (var item in account.Transactions)
             {
-                return new NoContentResult();
+                var transaction = new TransactionModel(
+                    item.Amount,
+                    item.Description,
+                    item.TransactionDate);
+
+                transactions.Add(transaction);
             }
 
-            List<AccountDetailsModel> accounts = new List<AccountDetailsModel>();
-
-            foreach (var account in customer.Accounts)
-            {
-                List<TransactionModel> transactions = new List<TransactionModel>();
-
-                foreach (var item in account.Transactions)
-                {
-                    var transaction = new TransactionModel(
-                        item.Amount,
-                        item.Description,
-                        item.TransactionDate);
-
-                    transactions.Add(transaction);
-                }
-
-                accounts.Add(new AccountDetailsModel(
-                    account.AccountId,
-                    account.CurrentBalance,
-                    transactions));
-            }
-
-            CustomerDetailsModel model = new CustomerDetailsModel(
-                customer.CustomerId,
-                customer.Personnummer,
-                customer.Name,
-                accounts
-            );
-
-            return new ObjectResult(model);
+            accounts.Add(new AccountDetailsModel(
+                account.AccountId,
+                account.CurrentBalance,
+                transactions));
         }
+
+        CustomerDetailsModel model = new CustomerDetailsModel(
+            customer.CustomerId,
+            customer.Personnummer,
+            customer.Name,
+            accounts
+        );
+
+        return new ObjectResult(model);
     }
 }

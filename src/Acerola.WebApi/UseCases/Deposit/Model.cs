@@ -1,20 +1,13 @@
-﻿namespace Acerola.WebApi.UseCases.Deposit
+﻿namespace Acerola.WebApi.UseCases.Deposit;
+
+internal sealed class Model(
+    double amount,
+    string description,
+    DateTime transactionDate,
+    double updatedBalance)
 {
-    using System;
-
-    internal sealed class Model
-    {
-        public double Amount { get; }
-        public string Description { get; }
-        public DateTime TransactionDate { get; }
-        public double UpdateBalance { get; }
-
-        public Model(double amount, string description, DateTime transactionDate, double updatedBalance)
-        {
-            Amount = amount;
-            Description = description;
-            TransactionDate = transactionDate;
-            UpdateBalance = updatedBalance;
-        }
-    }
+    public double Amount { get; } = amount;
+    public string Description { get; } = description;
+    public DateTime TransactionDate { get; } = transactionDate;
+    public double UpdateBalance { get; } = updatedBalance;
 }

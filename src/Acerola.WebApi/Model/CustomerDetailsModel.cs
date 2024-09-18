@@ -1,21 +1,13 @@
-﻿namespace Acerola.WebApi.Model
+﻿namespace Acerola.WebApi.Model;
+
+public sealed class CustomerDetailsModel(
+    Guid customerId,
+    string personnummer,
+    string name,
+    List<AccountDetailsModel> accounts)
 {
-    using System;
-    using System.Collections.Generic;
-
-    public sealed class CustomerDetailsModel
-    {
-        public Guid CustomerId { get; }
-        public string Personnummer { get; }
-        public string Name { get; }
-        public List<AccountDetailsModel> Accounts { get; }
-
-        public CustomerDetailsModel(Guid customerId, string personnummer, string name, List<AccountDetailsModel> accounts)
-        {
-            CustomerId = customerId;
-            Personnummer = personnummer;
-            Name = name;
-            Accounts = accounts;
-        }
-    }
+    public Guid CustomerId { get; } = customerId;
+    public string Personnummer { get; } = personnummer;
+    public string Name { get; } = name;
+    public List<AccountDetailsModel> Accounts { get; } = accounts;
 }

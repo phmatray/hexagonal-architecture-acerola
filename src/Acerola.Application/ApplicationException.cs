@@ -1,9 +1,4 @@
 ﻿namespace Acerola.Application;
 
-public class ApplicationException : Exception
-{
-    internal ApplicationException(string businessMessage)
-        : base(businessMessage)
-    {
-    }
-}
+public class ApplicationException(string businessMessage)
+    : Exception(businessMessage);

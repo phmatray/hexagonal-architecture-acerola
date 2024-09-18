@@ -1,9 +1,7 @@
-﻿namespace Acerola.WebApi.UseCases.Withdraw
+﻿namespace Acerola.WebApi.UseCases.Withdraw;
+
+public sealed class WithdrawRequest
 {
-    using System;
-    public sealed class WithdrawRequest
-    {
-        public Guid AccountId { get; set; }
-        public Double Amount { get; set; }
-    }
+    public Guid AccountId { get; set; }
+    public Double Amount { get; set; }
 }

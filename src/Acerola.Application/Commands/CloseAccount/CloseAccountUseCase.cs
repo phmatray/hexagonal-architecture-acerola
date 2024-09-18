@@ -9,7 +9,7 @@ public sealed class CloseAccountUseCase(
     {
         Account account =
             await accountReadOnlyRepository.Get(accountId)
-            ?? throw new AccountNotFoundException($"The account {accountId} does not exists or is already closed.");
+            ?? throw new AccountNotFoundException(accountId);
 			
         account.Close();
 

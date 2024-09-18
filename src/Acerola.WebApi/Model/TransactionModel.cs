@@ -1,16 +1,11 @@
-﻿namespace Acerola.WebApi.Model
+﻿namespace Acerola.WebApi.Model;
+
+public sealed class TransactionModel(
+    double amount,
+    string description,
+    DateTime transactionDate)
 {
-    using System;
-    public sealed class TransactionModel
-    {
-        public double Amount { get; }
-        public string Description { get; }
-        public DateTime TransactionDate { get; }
-        public TransactionModel(double amount, string description, DateTime transactionDate)
-        {
-            Amount = amount;
-            Description = description;
-            TransactionDate = transactionDate;
-        }
-    }
+    public double Amount { get; } = amount;
+    public string Description { get; } = description;
+    public DateTime TransactionDate { get; } = transactionDate;
 }

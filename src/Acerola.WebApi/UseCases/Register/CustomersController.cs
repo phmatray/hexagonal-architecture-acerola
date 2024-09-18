@@ -1,58 +1,51 @@
-﻿namespace Acerola.WebApi.UseCases.Register
+﻿using Acerola.Application.Commands.Register;
+using Acerola.WebApi.Model;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Acerola.WebApi.UseCases.Register;
+
+[Route("api/[controller]")]
+public sealed class CustomersController(IRegisterUseCase registerService)
+    : Controller
 {
-    using Microsoft.AspNetCore.Mvc;
-    using System.Threading.Tasks;
-    using Acerola.Application.Commands.Register;
-    using Acerola.WebApi.Model;
-    using System.Collections.Generic;
-
-    [Route("api/[controller]")]
-    public sealed class CustomersController : Controller
+    /// <summary>
+    /// Register a new Customer
+    /// </summary>
+    [HttpPost]
+    public async Task<IActionResult> Post([FromBody]RegisterRequest request)
     {
-        private readonly IRegisterUseCase registerService;
+        RegisterResult result = await registerService.Execute(
+            request.Personnummer, request.Name, request.InitialAmount);
 
-        public CustomersController(IRegisterUseCase registerService)
+        List<TransactionModel> transactions = [];
+
+        foreach (var item in result.Account.Transactions)
         {
-            this.registerService = registerService;
+            var transaction = new TransactionModel(
+                item.Amount,
+                item.Description,
+                item.TransactionDate);
+
+            transactions.Add(transaction);
         }
 
-        /// <summary>
-        /// Register a new Customer
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody]RegisterRequest request)
-        {
-            RegisterResult result = await registerService.Execute(
-                request.Personnummer, request.Name, request.InitialAmount);
+        AccountDetailsModel account = new AccountDetailsModel(
+            result.Account.AccountId,
+            result.Account.CurrentBalance,
+            transactions);
 
-            List<TransactionModel> transactions = new List<TransactionModel>();
+        List<AccountDetailsModel> accounts =
+        [
+            account
+        ];
 
-            foreach (var item in result.Account.Transactions)
-            {
-                var transaction = new TransactionModel(
-                    item.Amount,
-                    item.Description,
-                    item.TransactionDate);
+        Model model = new Model(
+            result.Customer.CustomerId,
+            result.Customer.Personnummer,
+            result.Customer.Name,
+            accounts
+        );
 
-                transactions.Add(transaction);
-            }
-
-            AccountDetailsModel account = new AccountDetailsModel(
-                result.Account.AccountId,
-                result.Account.CurrentBalance,
-                transactions);
-
-            List<AccountDetailsModel> accounts = new List<AccountDetailsModel>();
-            accounts.Add(account);
-
-            Model model = new Model(
-                result.Customer.CustomerId,
-                result.Customer.Personnummer,
-                result.Customer.Name,
-                accounts
-            );
-
-            return CreatedAtRoute("GetCustomer", new { customerId = model.CustomerId }, model);
-        }
+        return CreatedAtRoute("GetCustomer", new { customerId = model.CustomerId }, model);
     }
 }

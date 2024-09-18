@@ -1,39 +1,90 @@
-﻿namespace Acerola.WebApi
+﻿using Acerola.WebApi.Filters;
+using Autofac;
+using Autofac.Configuration;
+using Autofac.Extensions.DependencyInjection;
+using Microsoft.OpenApi.Models;
+using Serilog;
+using Serilog.Events;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Configure Autofac as the DI container
+builder.Host.UseServiceProviderFactory(new AutofacServiceProviderFactory());
+builder.Host.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 {
-    using Microsoft.AspNetCore;
-    using Microsoft.AspNetCore.Hosting;
-    using Autofac.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Configuration;
-    using Serilog;
-    using Serilog.Events;
-    using System.IO;
+    containerBuilder.RegisterModule(new ConfigurationModule(builder.Configuration));
+});
 
-    internal sealed class Program
+// Add configuration files and environment variables
+builder.Configuration.AddJsonFile("autofac.json", true, true);
+builder.Configuration.AddEnvironmentVariables();
+
+// Add logging using Serilog
+builder.Host.UseSerilog((context, loggerConfiguration) =>
+{
+    loggerConfiguration.MinimumLevel.Debug()
+        .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+        .Enrich.FromLogContext()
+        .WriteTo.File(Path.Combine(context.HostingEnvironment.ContentRootPath, "logs/log-.log"),
+            rollingInterval: RollingInterval.Day);
+});
+
+// Configure services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policyBuilder
+        => policyBuilder
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader());
+});
+
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add(typeof(DomainExceptionFilter));
+    options.Filters.Add(typeof(ValidateModelAttribute));
+});
+
+// Swagger configuration
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo
     {
-        public static void Main(string[] args)
-        {
-            BuildWebHost(args).Run();
-        }
+        Title = builder.Configuration["App:Title"],
+        Version = builder.Configuration["App:Version"],
+        Description = builder.Configuration["App:Description"],
+        TermsOfService = new Uri(builder.Configuration["App:TermsOfService"])
+    });
 
-        public static IWebHost BuildWebHost(string[] args)
-        {
-            return WebHost.CreateDefaultBuilder(args)
-                    .UseStartup<Startup>()
-                    .ConfigureAppConfiguration((builderContext, config) =>
-                    {
-                        IHostingEnvironment env = builderContext.HostingEnvironment;
-                        config.AddJsonFile("autofac.json");
-                        config.AddEnvironmentVariables();
-                    })
-                    .UseSerilog((hostingContext, loggerConfiguration) =>
-                    {
-                        loggerConfiguration.MinimumLevel.Debug()
-                            .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                            .Enrich.FromLogContext()
-                            .WriteTo.RollingFile(Path.Combine(hostingContext.HostingEnvironment.ContentRootPath, "logs/log-{Date}.log"));
-                    })
-                    .ConfigureServices(services => services.AddAutofac())
-                    .Build();
-        }
-    }
+    // Replaces DescribeAllEnumsAsStrings() since it's deprecated
+    options.CustomSchemaIds(type => type.FullName);
+
+    // Optional: Including XML comments if needed
+    var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+});
+
+var app = builder.Build();
+
+// Middleware configuration
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
 }
+
+// Enable CORS
+app.UseCors("CorsPolicy");
+
+// Enable routing and controllers
+app.UseRouting();
+app.MapControllers();
+
+// Enable Swagger
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+});
+
+app.Run();

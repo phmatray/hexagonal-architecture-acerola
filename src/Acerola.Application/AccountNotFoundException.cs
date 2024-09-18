@@ -1,8 +1,4 @@
 ﻿namespace Acerola.Application;
 
-internal sealed class AccountNotFoundException : ApplicationException
-{
-    internal AccountNotFoundException(string message)
-        : base(message)
-    { }
-}
+public sealed class AccountNotFoundException(Guid accountId)
+    : ApplicationException($"The account {accountId} does not exists or is already closed.");

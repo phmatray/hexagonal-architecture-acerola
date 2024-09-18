@@ -1,43 +1,39 @@
-﻿namespace Acerola.WebApi.Filters
+﻿using Acerola.Domain;
+using Acerola.Infrastructure;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json;
+using System.Net;
+using ApplicationException = Acerola.Application.ApplicationException;
+
+namespace Acerola.WebApi.Filters;
+
+public sealed class DomainExceptionFilter : IExceptionFilter
 {
-    using Acerola.Application;
-    using Acerola.Domain;
-    using Acerola.Infrastructure;
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.Filters;
-    using Newtonsoft.Json;
-    using System.Net;
-    
-    public sealed class DomainExceptionFilter : IExceptionFilter
+    public void OnException(ExceptionContext context)
     {
-        public void OnException(ExceptionContext context)
+        if (context.Exception is DomainException domainException)
         {
-            DomainException domainException = context.Exception as DomainException;
-            if (domainException != null)
-            {
-                string json = JsonConvert.SerializeObject(domainException.Message);
+            string json = JsonConvert.SerializeObject(domainException.Message);
 
-                context.Result = new BadRequestObjectResult(json);
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }
+            context.Result = new BadRequestObjectResult(json);
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        }
 
-            ApplicationException applicationException = context.Exception as ApplicationException;
-            if (applicationException != null)
-            {
-                string json = JsonConvert.SerializeObject(applicationException.Message);
+        if (context.Exception is ApplicationException applicationException)
+        {
+            string json = JsonConvert.SerializeObject(applicationException.Message);
 
-                context.Result = new BadRequestObjectResult(json);
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }
+            context.Result = new BadRequestObjectResult(json);
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        }
 
-            InfrastructureException infrastructureException = context.Exception as InfrastructureException;
-            if (infrastructureException != null)
-            {
-                string json = JsonConvert.SerializeObject(infrastructureException.Message);
+        if (context.Exception is InfrastructureException infrastructureException)
+        {
+            string json = JsonConvert.SerializeObject(infrastructureException.Message);
 
-                context.Result = new BadRequestObjectResult(json);
-                context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-            }
+            context.Result = new BadRequestObjectResult(json);
+            context.HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
         }
     }
 }

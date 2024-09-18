@@ -1,16 +1,15 @@
-﻿namespace Acerola.WebApi.Filters
-{
-    using Microsoft.AspNetCore.Mvc;
-    using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 
-    public sealed class ValidateModelAttribute : ActionFilterAttribute
+namespace Acerola.WebApi.Filters;
+
+public sealed class ValidateModelAttribute : ActionFilterAttribute
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
     {
-        public override void OnActionExecuting(ActionExecutingContext context)
+        if (!context.ModelState.IsValid)
         {
-            if (!context.ModelState.IsValid)
-            {
-                context.Result = new BadRequestObjectResult(context.ModelState);
-            }
+            context.Result = new BadRequestObjectResult(context.ModelState);
         }
     }
 }

@@ -1,42 +1,34 @@
-﻿namespace Acerola.WebApi.UseCases.Withdraw
+﻿using Acerola.Application.Commands.Withdraw;
+using Microsoft.AspNetCore.Mvc;
+
+namespace Acerola.WebApi.UseCases.Withdraw;
+
+[Route("api/[controller]")]
+public sealed class AccountsController(IWithdrawUseCase withdrawService)
+    : Controller
 {
-    using Microsoft.AspNetCore.Mvc;
-    using System.Threading.Tasks;
-    using Acerola.Application.Commands.Withdraw;
-
-    [Route("api/[controller]")]
-    public sealed class AccountsController : Controller
+    /// <summary>
+    /// Withdraw from an account
+    /// </summary>
+    [HttpPatch("Withdraw")]
+    public async Task<IActionResult> Withdraw([FromBody]WithdrawRequest request)
     {
-        private readonly IWithdrawUseCase withdrawService;
+        WithdrawResult depositResult = await withdrawService.Execute(
+            request.AccountId,
+            request.Amount);
 
-        public AccountsController(IWithdrawUseCase withdrawService)
+        if (depositResult == null)
         {
-            this.withdrawService = withdrawService;
+            return new NoContentResult();
         }
 
-        /// <summary>
-        /// Withdraw from an account
-        /// </summary>
-        [HttpPatch("Withdraw")]
-        public async Task<IActionResult> Withdraw([FromBody]WithdrawRequest request)
-        {
-            WithdrawResult depositResult = await withdrawService.Execute(
-                request.AccountId,
-                request.Amount);
+        Model model = new Model(
+            depositResult.Transaction.Amount,
+            depositResult.Transaction.Description,
+            depositResult.Transaction.TransactionDate,
+            depositResult.UpdatedBalance
+        );
 
-            if (depositResult == null)
-            {
-                return new NoContentResult();
-            }
-
-            Model model = new Model(
-                depositResult.Transaction.Amount,
-                depositResult.Transaction.Description,
-                depositResult.Transaction.TransactionDate,
-                depositResult.UpdatedBalance
-            );
-
-            return new ObjectResult(model);
-        }
+        return new ObjectResult(model);
     }
 }
