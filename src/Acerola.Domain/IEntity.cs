@@ -1,9 +1,6 @@
-﻿namespace Acerola.Domain
-{
-    using System;
+﻿namespace Acerola.Domain;
 
-    internal interface IEntity
-    {
-        Guid Id { get; }
-    }
+internal interface IEntity
+{
+    Guid Id { get; }
 }

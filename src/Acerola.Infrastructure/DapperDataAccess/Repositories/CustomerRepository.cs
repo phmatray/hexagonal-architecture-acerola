@@ -1,4 +1,6 @@
-﻿namespace Acerola.Infrastructure.DapperDataAccess.Repositories
+﻿using Microsoft.Data.SqlClient;
+
+namespace Acerola.Infrastructure.DapperDataAccess.Repositories
 {
     using Dapper;
     using Acerola.Application.Repositories;

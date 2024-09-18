@@ -1,4 +1,6 @@
-﻿namespace Acerola.Infrastructure.DapperDataAccess.Queries
+﻿using Microsoft.Data.SqlClient;
+
+namespace Acerola.Infrastructure.DapperDataAccess.Queries
 {
     using Dapper;
     using System;

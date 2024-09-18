@@ -1,37 +1,30 @@
-﻿namespace Acerola.Domain.Accounts
+﻿namespace Acerola.Domain.Accounts;
+
+public sealed class Debit : IEntity, ITransaction
 {
-    using Acerola.Domain.ValueObjects;
-    using System;
+    public Guid Id { get; private set; }
+    public Guid AccountId { get; private set; }
+    public Amount Amount { get; private set; }
+    public string Description => "Debit";
+    public DateTime TransactionDate { get; private set; }
 
-    public sealed class Debit : IEntity, ITransaction
+    private Debit() { }
+
+    public static Debit Load(Guid id, Guid accountId, Amount amount, DateTime transactionDate)
     {
-        public Guid Id { get; private set; }
-        public Guid AccountId { get; private set; }
-        public Amount Amount { get; private set; }
-        public string Description
-        {
-            get { return "Debit"; }
-        }
-        public DateTime TransactionDate { get; private set; }
+        Debit debit = new Debit();
+        debit.Id = id;
+        debit.AccountId = accountId;
+        debit.Amount = amount;
+        debit.TransactionDate = transactionDate;
+        return debit;
+    }
 
-        private Debit() { }
-
-        public static Debit Load(Guid id, Guid accountId, Amount amount, DateTime transactionDate)
-        {
-            Debit debit = new Debit();
-            debit.Id = id;
-            debit.AccountId = accountId;
-            debit.Amount = amount;
-            debit.TransactionDate = transactionDate;
-            return debit;
-        }
-
-        public Debit(Guid accountId, Amount amount)
-        {
-            Id = Guid.NewGuid();
-            AccountId = accountId;
-            Amount = amount;
-            TransactionDate = DateTime.UtcNow;
-        }
+    public Debit(Guid accountId, Amount amount)
+    {
+        Id = Guid.NewGuid();
+        AccountId = accountId;
+        Amount = amount;
+        TransactionDate = DateTime.UtcNow;
     }
 }

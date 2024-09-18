@@ -1,89 +1,86 @@
-﻿using System;
+﻿namespace Acerola.Domain.ValueObjects;
 
-namespace Acerola.Domain.ValueObjects
+public sealed class Amount
 {
-    public sealed class Amount
+    private double _value;
+
+    public Amount(double value)
     {
-        private double _value;
+        _value = value;
+    }
 
-        public Amount(double value)
+    public override string ToString()
+    {
+        return _value.ToString();
+    }
+
+    public static implicit operator double(Amount value)
+    {
+        return value._value;
+    }
+
+    public static Amount operator -(Amount value)
+    {
+        return new Amount(Math.Abs(value._value) * -1);
+    }
+
+    public static implicit operator Amount(double value)
+    {
+        return new Amount(value);
+    }
+
+    public static Amount operator +(Amount amount1, Amount amount2)
+    {
+        return new Amount(amount1._value + amount2._value);
+    }
+
+    public static Amount operator -(Amount amount1, Amount amount2)
+    {
+        return new Amount(amount1._value - amount2._value);
+    }
+
+    public static bool operator <(Amount amount1, Amount amount2)
+    {
+        return amount1._value < amount2._value;
+    }
+
+    public static bool operator >(Amount amount1, Amount amount2)
+    {
+        return amount1._value > amount2._value;
+    }
+
+    public static bool operator <=(Amount amount1, Amount amount2)
+    {
+        return amount1._value <= amount2._value;
+    }
+
+    public static bool operator >=(Amount amount1, Amount amount2)
+    {
+        return amount1._value >= amount2._value;
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj))
         {
-            _value = value;
+            return false;
         }
 
-        public override string ToString()
+        if (ReferenceEquals(this, obj))
         {
-            return _value.ToString();
+            return true;
         }
 
-        public static implicit operator double(Amount value)
+        if (obj is double)
         {
-            return value._value;
+            return (double)obj == _value;
         }
 
-        public static Amount operator -(Amount value)
-        {
-            return new Amount(Math.Abs(value._value) * -1);
-        }
+        return ((Amount)obj)._value == _value;
+    }
 
-        public static implicit operator Amount(double value)
-        {
-            return new Amount(value);
-        }
-
-        public static Amount operator +(Amount amount1, Amount amount2)
-        {
-            return new Amount(amount1._value + amount2._value);
-        }
-
-        public static Amount operator -(Amount amount1, Amount amount2)
-        {
-            return new Amount(amount1._value - amount2._value);
-        }
-
-        public static bool operator <(Amount amount1, Amount amount2)
-        {
-            return amount1._value < amount2._value;
-        }
-
-        public static bool operator >(Amount amount1, Amount amount2)
-        {
-            return amount1._value > amount2._value;
-        }
-
-        public static bool operator <=(Amount amount1, Amount amount2)
-        {
-            return amount1._value <= amount2._value;
-        }
-
-        public static bool operator >=(Amount amount1, Amount amount2)
-        {
-            return amount1._value >= amount2._value;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj))
-            {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            if (obj is double)
-            {
-                return (double)obj == _value;
-            }
-
-            return ((Amount)obj)._value == _value;
-        }
-
-        public override int GetHashCode()
-        {
-            return _value.GetHashCode();
-        }
+    public override int GetHashCode()
+    {
+        return _value.GetHashCode();
     }
 }

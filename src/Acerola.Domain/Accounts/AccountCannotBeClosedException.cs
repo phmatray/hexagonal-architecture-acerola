@@ -1,9 +1,8 @@
-﻿namespace Acerola.Domain.Accounts
+﻿namespace Acerola.Domain.Accounts;
+
+public sealed class AccountCannotBeClosedException : DomainException
 {
-    public sealed class AccountCannotBeClosedException : DomainException
-    {
-        internal AccountCannotBeClosedException(string message)
-            : base(message)
-        { }
-    }
+    internal AccountCannotBeClosedException(string message)
+        : base(message)
+    { }
 }

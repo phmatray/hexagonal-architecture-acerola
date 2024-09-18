@@ -1,9 +1,8 @@
-﻿namespace Acerola.Domain.ValueObjects
+﻿namespace Acerola.Domain.ValueObjects;
+
+internal sealed class InvalidSSNException : DomainException
 {
-    internal sealed class InvalidSSNException : DomainException
-    {
-        internal InvalidSSNException(string message)
-            : base(message)
-        { }
-    }
+    internal InvalidSSNException(string message)
+        : base(message)
+    { }
 }

@@ -1,9 +1,8 @@
-﻿namespace Acerola.Domain.ValueObjects
+﻿namespace Acerola.Domain.ValueObjects;
+
+public sealed class SSNShouldNotBeEmptyException : DomainException
 {
-    public sealed class SSNShouldNotBeEmptyException : DomainException
-    {
-        internal SSNShouldNotBeEmptyException(string message)
-            : base(message)
-        { }
-    }
+    internal SSNShouldNotBeEmptyException(string message)
+        : base(message)
+    { }
 }

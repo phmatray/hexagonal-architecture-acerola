@@ -1,12 +1,8 @@
-﻿namespace Acerola.Domain.Accounts
-{
-    using Acerola.Domain.ValueObjects;
-    using System;
+﻿namespace Acerola.Domain.Accounts;
 
-    public interface ITransaction
-    {
-        Amount Amount { get; }
-        string Description { get; }
-        DateTime TransactionDate { get; }
-    }
+public interface ITransaction
+{
+    Amount Amount { get; }
+    string Description { get; }
+    DateTime TransactionDate { get; }
 }

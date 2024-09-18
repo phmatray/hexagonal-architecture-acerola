@@ -1,4 +1,6 @@
-﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess
+﻿using Microsoft.Data.SqlClient;
+
+namespace Acerola.Infrastructure.EntityFrameworkDataAccess
 {
     using Acerola.Application.Repositories;
     using Acerola.Domain.Accounts;
@@ -48,7 +50,7 @@
 
             var id = new SqlParameter("@Id", account.Id);
 
-            int affectedRows = await _context.Database.ExecuteSqlCommandAsync(
+            int affectedRows = await _context.Database.ExecuteSqlRawAsync(
                 deleteSQL, id);
         }
 

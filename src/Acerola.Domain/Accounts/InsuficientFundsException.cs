@@ -1,9 +1,8 @@
-﻿namespace Acerola.Domain.Accounts
+﻿namespace Acerola.Domain.Accounts;
+
+public sealed class InsuficientFundsException : DomainException
 {
-    public sealed class InsuficientFundsException : DomainException
-    {
-        internal InsuficientFundsException(string message)
-            : base(message)
-        { }
-    }
+    internal InsuficientFundsException(string message)
+        : base(message)
+    { }
 }

@@ -1,27 +1,22 @@
-﻿namespace Acerola.Domain.Customers
+﻿namespace Acerola.Domain.Customers;
+
+public sealed class AccountCollection
 {
-    using System.Collections.Generic;
-    using System;
-    using System.Collections.ObjectModel;
+    private readonly IList<Guid> _accountIds;
 
-    public sealed class AccountCollection
+    public AccountCollection()
     {
-        private readonly IList<Guid> _accountIds;
+        _accountIds = new List<Guid>();
+    }
 
-        public AccountCollection()
-        {
-            _accountIds = new List<Guid>();
-        }
+    public IReadOnlyCollection<Guid> GetAccountIds()
+    {
+        IReadOnlyCollection<Guid> accountIds = new ReadOnlyCollection<Guid>(_accountIds);
+        return accountIds;
+    }
 
-        public IReadOnlyCollection<Guid> GetAccountIds()
-        {
-            IReadOnlyCollection<Guid> accountIds = new ReadOnlyCollection<Guid>(_accountIds);
-            return accountIds;
-        }
-
-        public void Add(Guid accountId)
-        {
-            _accountIds.Add(accountId);
-        }
+    public void Add(Guid accountId)
+    {
+        _accountIds.Add(accountId);
     }
 }

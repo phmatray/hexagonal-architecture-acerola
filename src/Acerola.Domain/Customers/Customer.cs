@@ -1,48 +1,43 @@
-﻿namespace Acerola.Domain.Customers
+﻿namespace Acerola.Domain.Customers;
+
+public sealed class Customer : IEntity, IAggregateRoot
 {
-    using System;
-    using System.Collections.Generic;
-    using Acerola.Domain.ValueObjects;
-
-    public sealed class Customer : IEntity, IAggregateRoot
+    public Guid Id { get; private set; }
+    public Name Name { get; private set; }
+    public SSN SSN { get; private set; }
+    public IReadOnlyCollection<Guid> Accounts
     {
-        public Guid Id { get; private set; }
-        public Name Name { get; private set; }
-        public SSN SSN { get; private set; }
-        public IReadOnlyCollection<Guid> Accounts
+        get
         {
-            get
-            {
-                IReadOnlyCollection<Guid> readOnly = _accounts.GetAccountIds();
-                return readOnly;
-            }
+            IReadOnlyCollection<Guid> readOnly = _accounts.GetAccountIds();
+            return readOnly;
         }
+    }
 
-        private AccountCollection _accounts;
+    private AccountCollection _accounts;
 
-        public Customer(SSN ssn, Name name)
-        {
-            Id = Guid.NewGuid();
-            SSN = ssn;
-            Name = name;
-            _accounts = new AccountCollection();
-        }
+    public Customer(SSN ssn, Name name)
+    {
+        Id = Guid.NewGuid();
+        SSN = ssn;
+        Name = name;
+        _accounts = new AccountCollection();
+    }
 
-        public void Register(Guid accountId)
-        {
-            _accounts.Add(accountId);
-        }
+    public void Register(Guid accountId)
+    {
+        _accounts.Add(accountId);
+    }
 
-        private Customer() { }
+    private Customer() { }
 
-        public static Customer Load(Guid id, Name name, SSN ssn, AccountCollection accounts)
-        {
-            Customer customer = new Customer();
-            customer.Id = id;
-            customer.Name = name;
-            customer.SSN = ssn;
-            customer._accounts = accounts;
-            return customer;
-        }
+    public static Customer Load(Guid id, Name name, SSN ssn, AccountCollection accounts)
+    {
+        Customer customer = new Customer();
+        customer.Id = id;
+        customer.Name = name;
+        customer.SSN = ssn;
+        customer._accounts = accounts;
+        return customer;
     }
 }
