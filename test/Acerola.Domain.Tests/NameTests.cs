@@ -1,37 +1,33 @@
-namespace Acerola.Domain.Tests
+namespace Acerola.Domain.Tests;
+
+public class NameTests
 {
-    using Acerola.Domain.ValueObjects;
-    using Xunit;
-
-    public class NameTests
+    [Fact]
+    public void Empty_Name_Should_Be_Created()
     {
-        [Fact]
-        public void Empty_Name_Should_Be_Created()
-        {
-            //
-            // Arrange
-            string empty = string.Empty;
+        //
+        // Arrange
+        string empty = string.Empty;
 
-            //
-            // Act and Assert
-            Assert.Throws<NameShouldNotBeEmptyException>(
-                () => new Name(empty));
-        }
+        //
+        // Act and Assert
+        Assert.Throws<NameShouldNotBeEmptyException>(
+            () => new Name(empty));
+    }
 
-        [Fact]
-        public void Full_Name_Shoud_Be_Created()
-        {
-            //
-            // Arrange
-            string valid = "Ivan Paulovich";
+    [Fact]
+    public void Full_Name_Shoud_Be_Created()
+    {
+        //
+        // Arrange
+        string valid = "Ivan Paulovich";
 
-            //
-            // Act
-            Name name = new Name(valid);
+        //
+        // Act
+        Name name = new Name(valid);
 
-            //
-            // Assert
-            Assert.Equal(new Name(valid), name);
-        }
+        //
+        // Assert
+        Assert.Equal(new Name(valid), name);
     }
 }

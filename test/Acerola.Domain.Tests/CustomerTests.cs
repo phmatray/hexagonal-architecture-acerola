@@ -1,51 +1,45 @@
-namespace Acerola.Domain.Tests
+namespace Acerola.Domain.Tests;
+
+public class CustomerTests
 {
-    using Xunit;
-    using Acerola.Domain.Customers;
-    using Acerola.Domain.Accounts;
-    using System;
-
-    public class CustomerTests
+    [Fact]
+    public void Customer_Should_Be_Registered_With_1_Account()
     {
-        [Fact]
-        public void Customer_Should_Be_Registered_With_1_Account()
-        {
-            //
-            // Arrange
-            Customer sut = new Customer(
-                "741214-3054",
-                "Sammy Fredriksson");
+        //
+        // Arrange
+        Customer sut = new Customer(
+            "741214-3054",
+            "Sammy Fredriksson");
 
-            var account = new Account(sut.Id);
+        var account = new Account(sut.Id);
 
-            //
-            // Act
-            sut.Register(account.Id);
+        //
+        // Act
+        sut.Register(account.Id);
 
-            //
-            // Assert
-            Assert.Single(sut.Accounts);
-        }
+        //
+        // Assert
+        Assert.Single(sut.Accounts);
+    }
 
-        [Fact]
-        public void Customer_Should_Be_Loaded()
-        {
-            //
-            // Arrange
-            AccountCollection accounts = new AccountCollection();
-            accounts.Add(Guid.NewGuid());
+    [Fact]
+    public void Customer_Should_Be_Loaded()
+    {
+        //
+        // Arrange
+        AccountCollection accounts = new AccountCollection();
+        accounts.Add(Guid.NewGuid());
 
-            Guid customerId = Guid.NewGuid();
+        Guid customerId = Guid.NewGuid();
 
-            Customer customer = Customer.Load(
-                customerId,
-                "Sammy Fredriksson",
-                "741214-3054",
-                accounts);
+        Customer customer = Customer.Load(
+            customerId,
+            "Sammy Fredriksson",
+            "741214-3054",
+            accounts);
 
-            Assert.Equal(customerId, customer.Id);
-            Assert.Equal("Sammy Fredriksson", customer.Name);
-            Assert.Equal("741214-3054", customer.SSN);
-        }
+        Assert.Equal(customerId, customer.Id);
+        Assert.Equal("Sammy Fredriksson", customer.Name);
+        Assert.Equal("741214-3054", customer.SSN);
     }
 }
