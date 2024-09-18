@@ -1,54 +1,25 @@
 ﻿namespace Acerola.Domain.ValueObjects;
 
-public sealed class Name
+public sealed record Name
 {
-    private string _text;
-
     public Name(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
+        {
             throw new NameShouldNotBeEmptyException();
+        }
 
-        this._text = text;
+        Text = text;
     }
+
+    public string Text { get; init; }
 
     public override string ToString()
-    {
-        return _text.ToString();
-    }
+        => Text;
 
     public static implicit operator Name(string text)
-    {
-        return new Name(text);
-    }
+        => new(text);
 
     public static implicit operator string(Name name)
-    {
-        return name._text;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, obj))
-        {
-            return true;
-        }
-
-        if (obj is string)
-        {
-            return obj.ToString() == _text;
-        }
-
-        return ((Name)obj)._text == _text;
-    }
-
-    public override int GetHashCode()
-    {
-        return _text.GetHashCode();
-    }
+        => name.Text;
 }

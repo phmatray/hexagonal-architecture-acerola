@@ -12,11 +12,13 @@ public sealed class Credit : IEntity, ITransaction
 
     public static Credit Load(Guid id, Guid accountId, Amount amount, DateTime transactionDate)
     {
-        Credit credit = new Credit();
-        credit.Id = id;
-        credit.AccountId = accountId;
-        credit.Amount = amount;
-        credit.TransactionDate = transactionDate;
+        Credit credit = new()
+        {
+            Id = id,
+            AccountId = accountId,
+            Amount = amount,
+            TransactionDate = transactionDate
+        };
         return credit;
     }
 

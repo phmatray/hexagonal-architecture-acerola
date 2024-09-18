@@ -6,14 +6,12 @@ public sealed class TransactionCollection
 
     public IReadOnlyCollection<ITransaction> GetTransactions()
     {
-        IReadOnlyCollection<ITransaction> transactions = new ReadOnlyCollection<ITransaction>(_transactions);
-        return transactions;
+        return new ReadOnlyCollection<ITransaction>(_transactions);
     }
 
     public ITransaction GetLastTransaction()
     {
-        ITransaction transaction = _transactions[^1];
-        return transaction;
+        return _transactions[^1];
     }
 
     public void Add(ITransaction transaction)
@@ -35,11 +33,15 @@ public sealed class TransactionCollection
 
         foreach (ITransaction item in _transactions)
         {
-            if (item is Debit)
-                totalAmount -= item.Amount;
-
-            if (item is Credit)
-                totalAmount += item.Amount;
+            switch (item)
+            {
+                case Debit:
+                    totalAmount -= item.Amount;
+                    break;
+                case Credit:
+                    totalAmount += item.Amount;
+                    break;
+            }
         }
 
         return totalAmount;

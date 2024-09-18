@@ -6,8 +6,7 @@ public sealed class AccountCollection
 
     public IReadOnlyCollection<Guid> GetAccountIds()
     {
-        IReadOnlyCollection<Guid> accountIds = new ReadOnlyCollection<Guid>(_accountIds);
-        return accountIds;
+        return new ReadOnlyCollection<Guid>(_accountIds);
     }
 
     public void Add(Guid accountId)

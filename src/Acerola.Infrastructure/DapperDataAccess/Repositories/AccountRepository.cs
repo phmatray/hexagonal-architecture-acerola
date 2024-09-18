@@ -62,7 +62,9 @@ public class AccountRepository(string connectionString)
             .QueryFirstOrDefaultAsync<Entities.Account>(accountSQL, new { id });
 
         if (account == null)
+        {
             return null;
+        }
 
         const string credits = 
             "SELECT * FROM [Credit] WHERE AccountId = @Id";

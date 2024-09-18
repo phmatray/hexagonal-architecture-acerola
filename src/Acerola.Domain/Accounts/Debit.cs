@@ -12,11 +12,13 @@ public sealed class Debit : IEntity, ITransaction
 
     public static Debit Load(Guid id, Guid accountId, Amount amount, DateTime transactionDate)
     {
-        Debit debit = new Debit();
-        debit.Id = id;
-        debit.AccountId = accountId;
-        debit.Amount = amount;
-        debit.TransactionDate = transactionDate;
+        Debit debit = new()
+        {
+            Id = id,
+            AccountId = accountId,
+            Amount = amount,
+            TransactionDate = transactionDate
+        };
         return debit;
     }
 

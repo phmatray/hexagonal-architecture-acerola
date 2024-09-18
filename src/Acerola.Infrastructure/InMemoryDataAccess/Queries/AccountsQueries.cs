@@ -14,7 +14,9 @@ public class AccountsQueries(Context context)
             .SingleOrDefault(e => e.Id == accountId);
 
         if (data == null)
+        {
             throw new AccountNotFoundException($"The account {accountId} does not exists or is not processed yet.");
+        }
 
         List<ITransaction> credits = data
             .GetTransactions()

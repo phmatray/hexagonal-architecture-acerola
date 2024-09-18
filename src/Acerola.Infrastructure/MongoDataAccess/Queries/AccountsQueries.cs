@@ -16,7 +16,9 @@ public class AccountsQueries(Context context)
             .SingleOrDefaultAsync();
 
         if (data == null)
+        {
             throw new AccountNotFoundException($"The account {accountId} does not exists or is not processed yet.");
+        }
 
         List<Credit> credits = await context
             .Credits

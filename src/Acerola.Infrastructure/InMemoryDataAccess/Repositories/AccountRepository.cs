@@ -34,8 +34,13 @@ public class AccountRepository(Context context)
     {
         Account? accountOld = context.Accounts
             .SingleOrDefault(e => e.Id == account.Id);
+        
+        if (accountOld != null)
+        {
+            context.Accounts.Remove(accountOld);
+            context.Accounts.Add(account);
+        }
 
-        accountOld = account;
         await Task.CompletedTask;
     }
 
@@ -43,8 +48,13 @@ public class AccountRepository(Context context)
     {
         Account? accountOld = context.Accounts
             .SingleOrDefault(e => e.Id == account.Id);
-
-        accountOld = account;
+        
+        if (accountOld != null)
+        {
+            context.Accounts.Remove(accountOld);
+            context.Accounts.Add(account);
+        }
+        
         await Task.CompletedTask;
     }
 }

@@ -16,7 +16,9 @@ public class CustomersQueries(Context context, IAccountsQueries accountsQueries)
             .SingleOrDefaultAsync();
 
         if (customer == null)
+        {
             throw new CustomerNotFoundException($"The customer {customerId} does not exists or is not processed yet.");
+        }
 
         List<Guid> accountIds = await context
             .Accounts

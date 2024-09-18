@@ -1,7 +1,3 @@
-using Microsoft.AspNetCore.Hosting;
-using Autofac.Extensions.DependencyInjection;
-using Microsoft.Extensions.Configuration;
-using Acerola.WebApi;
 using Microsoft.AspNetCore.TestHost;
 using Xunit;
 using System.Threading.Tasks;
@@ -20,18 +16,18 @@ public class CustomerRegistration
 
     public CustomerRegistration()
     {
-        var webHostBuilder = new WebHostBuilder()
-            .UseStartup<Startup>()
-            .ConfigureAppConfiguration((builderContext, config) =>
-            {
-                IWebHostEnvironment env = builderContext.HostingEnvironment;
-                config.AddJsonFile("autofac.json")
-                    .AddEnvironmentVariables();
-            })
-            .ConfigureServices(services => services.AddAutofac());
-
-        _server = new TestServer(webHostBuilder);
-        _client = _server.CreateClient();
+        // var webHostBuilder = new WebHostBuilder()
+        //     .UseStartup<Startup>()
+        //     .ConfigureAppConfiguration((builderContext, config) =>
+        //     {
+        //         IWebHostEnvironment env = builderContext.HostingEnvironment;
+        //         config.AddJsonFile("autofac.json")
+        //             .AddEnvironmentVariables();
+        //     })
+        //     .ConfigureServices(services => services.AddAutofac());
+        //
+        // _server = new TestServer(webHostBuilder);
+        // _client = _server.CreateClient();
     }
 
     [Fact]

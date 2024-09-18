@@ -1,9 +1,9 @@
-﻿using Microsoft.Data.SqlClient;
-using Acerola.Application.Repositories;
+﻿using Acerola.Application.Repositories;
 using Acerola.Domain.Accounts;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 
-namespace Acerola.Infrastructure.EntityFrameworkDataAccess;
+namespace Acerola.Infrastructure.EntityFrameworkDataAccess.Repositories;
 
 public class AccountRepository(Context context)
     : IAccountReadOnlyRepository, IAccountWriteOnlyRepository

@@ -20,7 +20,9 @@ public class CustomersQueries(string connectionString, IAccountsQueries accounts
             .QueryFirstOrDefaultAsync<Entities.Customer>(customerSQL, new { customerId });
 
         if (customer == null)
+        {
             return null;
+        }
 
         const string accountSQL = 
             "SELECT id FROM Account WHERE CustomerId = @customerId";
@@ -32,7 +34,11 @@ public class CustomersQueries(string connectionString, IAccountsQueries accounts
 
         foreach (Guid accountId in accounts)
         {
-            accountCollection.Add(await accountsQueries.GetAccount(accountId));
+            var account = await accountsQueries.GetAccount(accountId);
+            if (account != null)
+            {
+                accountCollection.Add(account);
+            }
         }
 
         CustomerResult customerResult = new(customer.Id,

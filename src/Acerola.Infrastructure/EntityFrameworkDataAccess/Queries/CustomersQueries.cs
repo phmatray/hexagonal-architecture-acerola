@@ -20,7 +20,9 @@ public class CustomersQueries(Context context, IAccountsQueries accountsQueries)
             .ToListAsync();
 
         if (customer == null)
+        {
             throw new CustomerNotFoundException($"The customer {customerId} does not exists or is not processed yet.");
+        }
 
         List<AccountResult> accountsResult = [];
 

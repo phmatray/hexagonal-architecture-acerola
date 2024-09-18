@@ -1,86 +1,36 @@
-﻿namespace Acerola.Domain.ValueObjects;
+﻿using System.Globalization;
 
-public sealed class Amount
+namespace Acerola.Domain.ValueObjects;
+
+public sealed record Amount(double Value)
 {
-    private double _value;
-
-    public Amount(double value)
-    {
-        _value = value;
-    }
-
     public override string ToString()
-    {
-        return _value.ToString();
-    }
+        => Value.ToString(CultureInfo.InvariantCulture);
 
-    public static implicit operator double(Amount value)
-    {
-        return value._value;
-    }
+    public static implicit operator double(Amount amount)
+        => amount.Value;
 
-    public static Amount operator -(Amount value)
-    {
-        return new Amount(Math.Abs(value._value) * -1);
-    }
+    public static Amount operator -(Amount amount)
+        => new(Math.Abs(amount.Value) * -1);
 
     public static implicit operator Amount(double value)
-    {
-        return new Amount(value);
-    }
+        => new(value);
 
     public static Amount operator +(Amount amount1, Amount amount2)
-    {
-        return new Amount(amount1._value + amount2._value);
-    }
+        => new(amount1.Value + amount2.Value);
 
     public static Amount operator -(Amount amount1, Amount amount2)
-    {
-        return new Amount(amount1._value - amount2._value);
-    }
+        => new(amount1.Value - amount2.Value);
 
     public static bool operator <(Amount amount1, Amount amount2)
-    {
-        return amount1._value < amount2._value;
-    }
+        => amount1.Value < amount2.Value;
 
     public static bool operator >(Amount amount1, Amount amount2)
-    {
-        return amount1._value > amount2._value;
-    }
+        => amount1.Value > amount2.Value;
 
     public static bool operator <=(Amount amount1, Amount amount2)
-    {
-        return amount1._value <= amount2._value;
-    }
+        => amount1.Value <= amount2.Value;
 
     public static bool operator >=(Amount amount1, Amount amount2)
-    {
-        return amount1._value >= amount2._value;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-        {
-            return false;
-        }
-
-        if (ReferenceEquals(this, obj))
-        {
-            return true;
-        }
-
-        if (obj is double)
-        {
-            return (double)obj == _value;
-        }
-
-        return ((Amount)obj)._value == _value;
-    }
-
-    public override int GetHashCode()
-    {
-        return _value.GetHashCode();
-    }
+        => amount1.Value >= amount2.Value;
 }

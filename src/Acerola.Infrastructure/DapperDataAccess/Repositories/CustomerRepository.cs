@@ -35,7 +35,9 @@ public class CustomerReadOnlyRepository(string connectionString)
             .QueryFirstOrDefaultAsync<Entities.Customer>(customerSQL, new { id });
 					
         if (customer == null)
+        {
             return null;
+        }
 
         const string accountSQL = 
             "SELECT * FROM Account WHERE CustomerId = @Id";

@@ -1,61 +1,33 @@
 ﻿namespace Acerola.Domain.ValueObjects;
 
-public sealed class SSN
+public sealed partial record SSN
 {
-    public string _text { get; private set; }
-    const string RegExForValidation = @"^\d{6,8}[-|(\s)]{0,1}\d{4}$";
-
     public SSN(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
+        {
             throw new SSNShouldNotBeEmptyException();
+        }
 
-        Regex regex = new Regex(RegExForValidation);
+        Regex regex = SSNValidationRegex();
         Match match = regex.Match(text);
 
         if (!match.Success)
+        {
             throw new InvalidSSNException();
-
-        this._text = text;
-    }
-
-    public override string ToString()
-    {
-        return _text.ToString();
-    }
-
-    public static implicit operator SSN(string text)
-    {
-        return new SSN(text);
-    }
-
-    public static implicit operator string(SSN ssn)
-    {
-        return ssn._text;
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj))
-        {
-            return false;
         }
 
-        if (ReferenceEquals(this, obj))
-        {
-            return true;
-        }
-
-        if (obj is string)
-        {
-            return obj.ToString() == _text;
-        }
-
-        return ((SSN)obj)._text == _text;
+        Text = text;
     }
 
-    public override int GetHashCode()
-    {
-        return _text.GetHashCode();
-    }
+    public string Text { get; private set; }
+
+    public override string ToString() => Text;
+
+    public static implicit operator SSN(string text) => new(text);
+
+    public static implicit operator string(SSN ssn) => ssn.Text;
+
+    [GeneratedRegex(@"^\d{6,8}[-|(\s)]{0,1}\d{4}$")]
+    private static partial Regex SSNValidationRegex();
 }

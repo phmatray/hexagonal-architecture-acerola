@@ -1,6 +1,6 @@
 ﻿namespace Acerola.Domain.Accounts;
 
-public sealed class Account : IEntity, IAggregateRoot
+public sealed class Account : IAggregateRoot
 {
     public Guid Id { get; private set; }
     public Guid CustomerId { get; private set; }
@@ -28,7 +28,9 @@ public sealed class Account : IEntity, IAggregateRoot
     public void Withdraw(Amount amount)
     {
         if (_transactions.GetCurrentBalance() < amount)
+        {
             throw new InsufficientFundsException(Id, amount);
+        }
 
         Debit debit = new Debit(Id, amount);
         _transactions.Add(debit);
@@ -37,7 +39,9 @@ public sealed class Account : IEntity, IAggregateRoot
     public void Close()
     {
         if (_transactions.GetCurrentBalance() > 0)
+        {
             throw new AccountCannotBeClosedException(Id);
+        }
     }
 
     public Amount GetCurrentBalance()
@@ -56,10 +60,12 @@ public sealed class Account : IEntity, IAggregateRoot
 
     public static Account Load(Guid id, Guid customerId, TransactionCollection transactions)
     {
-        Account account = new Account();
-        account.Id = id;
-        account.CustomerId = customerId;
-        account._transactions = transactions;
+        Account account = new()
+        {
+            Id = id,
+            CustomerId = customerId,
+            _transactions = transactions
+        };
         return account;
     }
 }

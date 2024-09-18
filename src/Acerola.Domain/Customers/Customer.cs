@@ -1,6 +1,6 @@
 ﻿namespace Acerola.Domain.Customers;
 
-public sealed class Customer : IEntity, IAggregateRoot
+public sealed class Customer : IAggregateRoot
 {
     public Guid Id { get; private set; }
     public Name Name { get; private set; }
@@ -33,11 +33,13 @@ public sealed class Customer : IEntity, IAggregateRoot
 
     public static Customer Load(Guid id, Name name, SSN ssn, AccountCollection accounts)
     {
-        Customer customer = new Customer();
-        customer.Id = id;
-        customer.Name = name;
-        customer.SSN = ssn;
-        customer._accounts = accounts;
+        Customer customer = new Customer
+        {
+            Id = id,
+            Name = name,
+            SSN = ssn,
+            _accounts = accounts
+        };
         return customer;
     }
 }

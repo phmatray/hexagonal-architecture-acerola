@@ -2,7 +2,7 @@
 using Acerola.Domain.Customers;
 using Microsoft.EntityFrameworkCore;
 
-namespace Acerola.Infrastructure.EntityFrameworkDataAccess;
+namespace Acerola.Infrastructure.EntityFrameworkDataAccess.Repositories;
 
 public class CustomerRepository(Context context)
     : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository

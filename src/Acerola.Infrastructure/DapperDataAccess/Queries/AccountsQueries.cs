@@ -21,7 +21,9 @@ public class AccountsQueries(string connectionString)
             .QueryFirstOrDefaultAsync<Entities.Account>(accountSQL, new { accountId });
 
         if (account == null)
+        {
             return null;
+        }
 
         const string credits = 
             "SELECT * FROM [Credit] WHERE AccountId = @accountId";
