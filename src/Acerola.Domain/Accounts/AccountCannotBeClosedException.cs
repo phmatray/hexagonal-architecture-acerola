@@ -1,8 +1,4 @@
 ﻿namespace Acerola.Domain.Accounts;
 
-public sealed class AccountCannotBeClosedException : DomainException
-{
-    internal AccountCannotBeClosedException(string message)
-        : base(message)
-    { }
-}
+public sealed class AccountCannotBeClosedException(Guid id)
+    : DomainException($"The account {id} can not be closed because it has funds.");

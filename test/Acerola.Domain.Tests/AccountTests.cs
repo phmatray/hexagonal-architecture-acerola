@@ -83,7 +83,7 @@ public class AccountTests
 
         //
         // Act and Assert
-        Assert.Throws<InsuficientFundsException>(
+        Assert.Throws<InsufficientFundsException>(
             () => sut.Withdraw(5000));
     }
 

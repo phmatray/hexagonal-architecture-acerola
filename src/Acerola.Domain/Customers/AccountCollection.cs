@@ -2,12 +2,7 @@
 
 public sealed class AccountCollection
 {
-    private readonly IList<Guid> _accountIds;
-
-    public AccountCollection()
-    {
-        _accountIds = new List<Guid>();
-    }
+    private readonly List<Guid> _accountIds = [];
 
     public IReadOnlyCollection<Guid> GetAccountIds()
     {

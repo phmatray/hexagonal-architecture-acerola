@@ -1,8 +1,4 @@
 ﻿namespace Acerola.Domain.ValueObjects;
 
-internal sealed class InvalidSSNException : DomainException
-{
-    internal InvalidSSNException(string message)
-        : base(message)
-    { }
-}
+internal sealed class InvalidSSNException()
+    : DomainException("Invalid SSN format. Use YYMMDDNNNN.");

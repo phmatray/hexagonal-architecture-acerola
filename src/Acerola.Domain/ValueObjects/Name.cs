@@ -7,7 +7,7 @@ public sealed class Name
     public Name(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-            throw new NameShouldNotBeEmptyException("The 'Name' field is required");
+            throw new NameShouldNotBeEmptyException();
 
         this._text = text;
     }

@@ -8,13 +8,13 @@ public sealed class SSN
     public SSN(string text)
     {
         if (string.IsNullOrWhiteSpace(text))
-            throw new SSNShouldNotBeEmptyException("The 'SSN' field is required");
+            throw new SSNShouldNotBeEmptyException();
 
         Regex regex = new Regex(RegExForValidation);
         Match match = regex.Match(text);
 
         if (!match.Success)
-            throw new InvalidSSNException("Invalid SSN format. Use YYMMDDNNNN.");
+            throw new InvalidSSNException();
 
         this._text = text;
     }
