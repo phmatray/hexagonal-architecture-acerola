@@ -1,22 +1,17 @@
-﻿namespace Acerola.Application.Commands.Withdraw
+﻿namespace Acerola.Application.Commands.Withdraw;
+
+public sealed class WithdrawResult
 {
-    using Acerola.Application.Results;
-    using Acerola.Domain.Accounts;
-    using Acerola.Domain.ValueObjects;
+    public TransactionResult Transaction { get; }
+    public double UpdatedBalance { get; }
 
-    public sealed class WithdrawResult
+    public WithdrawResult(Debit transaction, Amount updatedBalance)
     {
-        public TransactionResult Transaction { get; }
-        public double UpdatedBalance { get; }
+        Transaction = new TransactionResult(
+            transaction.Description,
+            transaction.Amount,
+            transaction.TransactionDate);
 
-        public WithdrawResult(Debit transaction, Amount updatedBalance)
-        {
-            Transaction = new TransactionResult(
-                transaction.Description,
-                transaction.Amount,
-                transaction.TransactionDate);
-
-            UpdatedBalance = updatedBalance;
-        }
+        UpdatedBalance = updatedBalance;
     }
 }

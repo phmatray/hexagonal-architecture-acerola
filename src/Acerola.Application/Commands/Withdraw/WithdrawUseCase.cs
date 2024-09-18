@@ -1,41 +1,26 @@
-﻿namespace Acerola.Application.Commands.Withdraw
+﻿namespace Acerola.Application.Commands.Withdraw;
+
+public sealed class WithdrawUseCase(
+    IAccountReadOnlyRepository accountReadOnlyRepository,
+    IAccountWriteOnlyRepository accountWriteOnlyRepository)
+    : IWithdrawUseCase
 {
-    using System;
-    using System.Threading.Tasks;
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Accounts;
-    using Acerola.Domain.ValueObjects;
-
-    public sealed class WithdrawUseCase : IWithdrawUseCase
+    public async Task<WithdrawResult> Execute(Guid accountId, Amount amount)
     {
-        private readonly IAccountReadOnlyRepository accountReadOnlyRepository;
-        private readonly IAccountWriteOnlyRepository accountWriteOnlyRepository;
+        Account account =
+            await accountReadOnlyRepository.Get(accountId)
+            ?? throw new AccountNotFoundException($"The account {accountId} does not exists or is already closed.");
 
-        public WithdrawUseCase(
-            IAccountReadOnlyRepository accountReadOnlyRepository,
-            IAccountWriteOnlyRepository accountWriteOnlyRepository)
-        {
-            this.accountReadOnlyRepository = accountReadOnlyRepository;
-            this.accountWriteOnlyRepository = accountWriteOnlyRepository;
-        }
+        account.Withdraw(amount);
+        Debit debit = (Debit)account.GetLastTransaction();
 
-        public async Task<WithdrawResult> Execute(Guid accountId, Amount amount)
-        {
-            Account account = await accountReadOnlyRepository.Get(accountId);
-            if (account == null)
-                throw new AccountNotFoundException($"The account {accountId} does not exists or is already closed.");
+        await accountWriteOnlyRepository.Update(account, debit);
 
-            account.Withdraw(amount);
-            Debit debit = (Debit)account.GetLastTransaction();
+        WithdrawResult result = new WithdrawResult(
+            debit,
+            account.GetCurrentBalance()
+        );
 
-            await accountWriteOnlyRepository.Update(account, debit);
-
-            WithdrawResult result = new WithdrawResult(
-                debit,
-                account.GetCurrentBalance()
-            );
-
-            return result;
-        }
+        return result;
     }
 }

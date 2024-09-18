@@ -1,11 +1,6 @@
-﻿namespace Acerola.Application.Queries
-{
-    using Acerola.Application.Results;
-    using System;
-    using System.Threading.Tasks;
+﻿namespace Acerola.Application.Queries;
 
-    public interface ICustomersQueries
-    {
-        Task<CustomerResult> GetCustomer(Guid customerId);
-    }
+public interface ICustomersQueries
+{
+    Task<CustomerResult> GetCustomer(Guid customerId);
 }

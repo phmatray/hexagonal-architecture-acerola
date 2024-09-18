@@ -1,38 +1,24 @@
-﻿namespace Acerola.Application.Commands.Register
+﻿namespace Acerola.Application.Commands.Register;
+
+public sealed class RegisterUseCase(
+    ICustomerWriteOnlyRepository customerWriteOnlyRepository,
+    IAccountWriteOnlyRepository accountWriteOnlyRepository)
+    : IRegisterUseCase
 {
-    using System.Threading.Tasks;
-    using Acerola.Domain.Customers;
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Accounts;
-
-    public sealed class RegisterUseCase : IRegisterUseCase
+    public async Task<RegisterResult> Execute(string pin, string name, double initialAmount)
     {
-        private readonly ICustomerWriteOnlyRepository customerWriteOnlyRepository;
-        private readonly IAccountWriteOnlyRepository accountWriteOnlyRepository;
+        Customer customer = new Customer(pin, name);
 
-        public RegisterUseCase(
-            ICustomerWriteOnlyRepository customerWriteOnlyRepository,
-            IAccountWriteOnlyRepository accountWriteOnlyRepository)
-        {
-            this.customerWriteOnlyRepository = customerWriteOnlyRepository;
-            this.accountWriteOnlyRepository = accountWriteOnlyRepository;
-        }
+        Account account = new Account(customer.Id);
+        account.Deposit(initialAmount);
+        Credit credit = (Credit)account.GetLastTransaction();
 
-        public async Task<RegisterResult> Execute(string pin, string name, double initialAmount)
-        {
-            Customer customer = new Customer(pin, name);
+        customer.Register(account.Id);
 
-            Account account = new Account(customer.Id);
-            account.Deposit(initialAmount);
-            Credit credit = (Credit)account.GetLastTransaction();
+        await customerWriteOnlyRepository.Add(customer);
+        await accountWriteOnlyRepository.Add(account, credit);
 
-            customer.Register(account.Id);
-
-            await customerWriteOnlyRepository.Add(customer);
-            await accountWriteOnlyRepository.Add(account, credit);
-
-            RegisterResult result = new RegisterResult(customer, account);
-            return result;
-        }
+        RegisterResult result = new RegisterResult(customer, account);
+        return result;
     }
 }

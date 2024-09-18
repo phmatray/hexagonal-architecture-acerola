@@ -1,9 +1,10 @@
-﻿namespace Acerola.WebApi.UseCases.CloseAccount
+﻿using Acerola.Application.Commands.CloseAccount;
+
+namespace Acerola.WebApi.UseCases.CloseAccount
 {
     using Microsoft.AspNetCore.Mvc;
     using System;
     using System.Threading.Tasks;
-    using Acerola.Application.Commands.Close;
 
     [Route("api/[controller]")]
     public sealed class AccountsController : Controller

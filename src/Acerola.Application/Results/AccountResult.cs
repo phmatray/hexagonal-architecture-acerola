@@ -1,39 +1,34 @@
-﻿namespace Acerola.Application.Results
+﻿namespace Acerola.Application.Results;
+
+public sealed class AccountResult
 {
-    using Acerola.Domain.Accounts;
-    using System;
-    using System.Collections.Generic;
+    public Guid AccountId { get; }
+    public double CurrentBalance { get; }
+    public List<TransactionResult> Transactions { get; }
 
-    public sealed class AccountResult
+    public AccountResult(
+        Guid accountId,
+        double currentBalance,
+        List<TransactionResult> transactions)
     {
-        public Guid AccountId { get; }
-        public double CurrentBalance { get; }
-        public List<TransactionResult> Transactions { get; }
+        AccountId = accountId;
+        CurrentBalance = currentBalance;
+        Transactions = transactions;
+    }
 
-        public AccountResult(
-            Guid accountId,
-            double currentBalance,
-            List<TransactionResult> transactions)
+    public AccountResult(Account account)
+    {
+        AccountId = account.Id;
+        CurrentBalance = account.GetCurrentBalance();
+
+        List<TransactionResult> transactionResults = new List<TransactionResult>();
+        foreach (ITransaction transaction in account.GetTransactions())
         {
-            AccountId = accountId;
-            CurrentBalance = currentBalance;
-            Transactions = transactions;
+            TransactionResult transactionResult = new TransactionResult(
+                transaction.Description, transaction.Amount, transaction.TransactionDate);
+            transactionResults.Add(transactionResult);
         }
 
-        public AccountResult(Account account)
-        {
-            AccountId = account.Id;
-            CurrentBalance = account.GetCurrentBalance();
-
-            List<TransactionResult> transactionResults = new List<TransactionResult>();
-            foreach (ITransaction transaction in account.GetTransactions())
-            {
-                TransactionResult transactionResult = new TransactionResult(
-                    transaction.Description, transaction.Amount, transaction.TransactionDate);
-                transactionResults.Add(transactionResult);
-            }
-
-            Transactions = transactionResults;
-        }
+        Transactions = transactionResults;
     }
 }

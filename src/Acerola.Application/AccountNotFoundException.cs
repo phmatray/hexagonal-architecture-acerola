@@ -1,9 +1,8 @@
-﻿namespace Acerola.Application
+﻿namespace Acerola.Application;
+
+internal sealed class AccountNotFoundException : ApplicationException
 {
-    internal sealed class AccountNotFoundException : ApplicationException
-    {
-        internal AccountNotFoundException(string message)
-            : base(message)
-        { }
-    }
+    internal AccountNotFoundException(string message)
+        : base(message)
+    { }
 }

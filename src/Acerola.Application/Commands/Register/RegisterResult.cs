@@ -1,34 +1,28 @@
-﻿namespace Acerola.Application.Commands.Register
+﻿namespace Acerola.Application.Commands.Register;
+
+public sealed class RegisterResult
 {
-    using Acerola.Application.Results;
-    using Acerola.Domain.Accounts;
-    using Acerola.Domain.Customers;
-    using System.Collections.Generic;
+    public CustomerResult Customer { get; }
+    public AccountResult Account { get; }
 
-    public sealed class RegisterResult
+    public RegisterResult(Customer customer, Account account)
     {
-        public CustomerResult Customer { get; }
-        public AccountResult Account { get; }
+        List<TransactionResult> transactionResults = new List<TransactionResult>();
 
-        public RegisterResult(Customer customer, Account account)
+        foreach (ITransaction transaction in account.GetTransactions())
         {
-            List<TransactionResult> transactionResults = new List<TransactionResult>();
-
-            foreach (ITransaction transaction in account.GetTransactions())
-            {
-                transactionResults.Add(
-                    new TransactionResult(
-                        transaction.Description,
-                        transaction.Amount,
-                        transaction.TransactionDate));
-            }
-
-            Account = new AccountResult(account.Id, account.GetCurrentBalance(), transactionResults);
-
-            List<AccountResult> accountResults = new List<AccountResult>();
-            accountResults.Add(Account);
-
-            Customer = new CustomerResult(customer.Id, customer.SSN, customer.Name, accountResults);
+            transactionResults.Add(
+                new TransactionResult(
+                    transaction.Description,
+                    transaction.Amount,
+                    transaction.TransactionDate));
         }
+
+        Account = new AccountResult(account.Id, account.GetCurrentBalance(), transactionResults);
+
+        List<AccountResult> accountResults = new List<AccountResult>();
+        accountResults.Add(Account);
+
+        Customer = new CustomerResult(customer.Id, customer.SSN, customer.Name, accountResults);
     }
 }

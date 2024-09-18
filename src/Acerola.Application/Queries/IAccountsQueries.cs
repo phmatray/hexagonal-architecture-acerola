@@ -1,11 +1,6 @@
-﻿namespace Acerola.Application.Queries
-{
-    using Acerola.Application.Results;
-    using System;
-    using System.Threading.Tasks;
+﻿namespace Acerola.Application.Queries;
 
-    public interface IAccountsQueries
-    {
-        Task<AccountResult> GetAccount(Guid accountId);
-    }
+public interface IAccountsQueries
+{
+    Task<AccountResult> GetAccount(Guid accountId);
 }

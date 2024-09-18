@@ -1,11 +1,6 @@
-﻿namespace Acerola.Application.Commands.Deposit
-{
-    using Acerola.Domain.ValueObjects;
-    using System;
-    using System.Threading.Tasks;
+﻿namespace Acerola.Application.Commands.Deposit;
 
-    public interface IDepositUseCase
-    {
-        Task<DepositResult> Execute(Guid accountId, Amount amount);
-    }
+public interface IDepositUseCase
+{
+    Task<DepositResult> Execute(Guid accountId, Amount amount);
 }

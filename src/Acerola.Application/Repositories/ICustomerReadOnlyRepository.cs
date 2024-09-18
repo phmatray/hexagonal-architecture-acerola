@@ -1,11 +1,6 @@
-﻿namespace Acerola.Application.Repositories
-{
-    using Acerola.Domain.Customers;
-    using System;
-    using System.Threading.Tasks;
+﻿namespace Acerola.Application.Repositories;
 
-    public interface ICustomerReadOnlyRepository
-    {
-        Task<Customer> Get(Guid id);
-    }
+public interface ICustomerReadOnlyRepository
+{
+    Task<Customer?> Get(Guid id);
 }

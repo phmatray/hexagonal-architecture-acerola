@@ -1,26 +1,21 @@
-﻿namespace Acerola.Application.Results
+﻿namespace Acerola.Application.Results;
+
+public sealed class CustomerResult
 {
-    using Acerola.Domain.Customers;
-    using System;
-    using System.Collections.Generic;
+    public Guid CustomerId { get; }
+    public string Personnummer { get; }
+    public string Name { get; }
+    public IReadOnlyList<AccountResult> Accounts { get; }
 
-    public sealed class CustomerResult
+    public CustomerResult(
+        Guid customerId,
+        string personnummer,
+        string name,
+        List<AccountResult> accounts)
     {
-        public Guid CustomerId { get; }
-        public string Personnummer { get; }
-        public string Name { get; }
-        public IReadOnlyList<AccountResult> Accounts { get; }
-
-        public CustomerResult(
-            Guid customerId,
-            string personnummer,
-            string name,
-            List<AccountResult> accounts)
-        {
-            CustomerId = customerId;
-            Personnummer = personnummer;
-            Name = name;
-            Accounts = accounts;
-        }
+        CustomerId = customerId;
+        Personnummer = personnummer;
+        Name = name;
+        Accounts = accounts;
     }
 }

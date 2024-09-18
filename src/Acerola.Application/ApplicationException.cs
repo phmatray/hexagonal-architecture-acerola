@@ -1,11 +1,9 @@
-﻿namespace Acerola.Application
+﻿namespace Acerola.Application;
+
+public class ApplicationException : Exception
 {
-    using System;
-    public class ApplicationException : Exception
+    internal ApplicationException(string businessMessage)
+        : base(businessMessage)
     {
-        internal ApplicationException(string businessMessage)
-               : base(businessMessage)
-        {
-        }
     }
 }
