@@ -1,138 +1,130 @@
 ﻿using Microsoft.Data.SqlClient;
+using Acerola.Application.Repositories;
+using Acerola.Domain.Accounts;
+using Microsoft.EntityFrameworkCore;
 
-namespace Acerola.Infrastructure.EntityFrameworkDataAccess
+namespace Acerola.Infrastructure.EntityFrameworkDataAccess;
+
+public class AccountRepository(Context context)
+    : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
 {
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Accounts;
-    using System;
-    using System.Threading.Tasks;
-    using Microsoft.EntityFrameworkCore;
-    using System.Data.SqlClient;
-    using System.Collections.Generic;
-    using System.Linq;
+    private readonly Context _context = context ?? throw new ArgumentNullException(nameof(context));
 
-    public class AccountRepository : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
+    public async Task Add(Account account, Credit credit)
     {
-        private readonly Context _context;
-
-        public AccountRepository(Context context)
+        Entities.Account accountEntity = new()
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            CustomerId = account.CustomerId,
+            Id = account.Id
+        };
+
+        Entities.Credit creditEntity = new()
+        {
+            AccountId = credit.AccountId,
+            Amount = credit.Amount,
+            Id = credit.Id,
+            TransactionDate = credit.TransactionDate
+        };
+
+        await _context.Accounts.AddAsync(accountEntity);
+        await _context.Credits.AddAsync(creditEntity);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task Delete(Account account)
+    {
+        const string deleteSQL =
+            """
+            DELETE FROM Credit WHERE AccountId = @Id;
+            DELETE FROM Debit WHERE AccountId = @Id;
+            DELETE FROM Account WHERE Id = @Id;
+            """;
+
+        var id = new SqlParameter("@Id", account.Id);
+
+        await _context.Database.ExecuteSqlRawAsync(deleteSQL, id);
+    }
+
+    public async Task<Account?> Get(Guid id)
+    {
+        Entities.Account? account = await _context
+            .Accounts
+            .FindAsync(id);
+
+        List<Entities.Credit> credits = await _context
+            .Credits
+            .Where(e => e.AccountId == id)
+            .ToListAsync();
+
+        List<Entities.Debit> debits = await _context
+            .Debits
+            .Where(e => e.AccountId == id)
+            .ToListAsync();
+
+        List<ITransaction> transactions = [];
+
+        foreach (Entities.Credit transactionData in credits)
+        {
+            Credit transaction = Credit.Load(
+                transactionData.Id,
+                transactionData.AccountId,
+                transactionData.Amount,
+                transactionData.TransactionDate);
+
+            transactions.Add(transaction);
         }
 
-        public async Task Add(Account account, Credit credit)
+        foreach (Entities.Debit transactionData in debits)
         {
-            Entities.Account accountEntity = new Entities.Account()
-            {
-                CustomerId = account.CustomerId,
-                Id = account.Id
-            };
+            Debit transaction = Debit.Load(
+                transactionData.Id,
+                transactionData.AccountId,
+                transactionData.Amount,
+                transactionData.TransactionDate);
 
-            Entities.Credit creditEntity = new Entities.Credit()
-            {
-                AccountId = credit.AccountId,
-                Amount = credit.Amount,
-                Id = credit.Id,
-                TransactionDate = credit.TransactionDate
-            };
-
-            await _context.Accounts.AddAsync(accountEntity);
-            await _context.Credits.AddAsync(creditEntity);
-            await _context.SaveChangesAsync();
+            transactions.Add(transaction);
         }
 
-        public async Task Delete(Account account)
+        var orderedTransactions = transactions
+            .OrderBy(o => o.TransactionDate)
+            .ToList();
+
+        TransactionCollection transactionCollection = new();
+        transactionCollection.Add(orderedTransactions);
+
+        Account result = Account.Load(
+            account.Id,
+            account.CustomerId,
+            transactionCollection);
+
+        return result;
+    }
+
+    public async Task Update(Account account, Credit credit)
+    {
+        Entities.Credit creditEntity = new()
         {
-            string deleteSQL =
-                    @"DELETE FROM Credit WHERE AccountId = @Id;
-                      DELETE FROM Debit WHERE AccountId = @Id;
-                      DELETE FROM Account WHERE Id = @Id;";
+            AccountId = credit.AccountId,
+            Amount = credit.Amount,
+            Id = credit.Id,
+            TransactionDate = credit.TransactionDate
+        };
 
-            var id = new SqlParameter("@Id", account.Id);
+        await _context.Credits.AddAsync(creditEntity);
+        await _context.SaveChangesAsync();
+    }
 
-            int affectedRows = await _context.Database.ExecuteSqlRawAsync(
-                deleteSQL, id);
-        }
-
-        public async Task<Account> Get(Guid id)
+    public async Task Update(Account account, Debit debit)
+    {
+        Entities.Debit debitEntity = new()
         {
-            Entities.Account account = await _context
-                .Accounts
-                .FindAsync(id);
+            AccountId = debit.AccountId,
+            Amount = debit.Amount,
+            Id = debit.Id,
+            TransactionDate = debit.TransactionDate
+        };
 
-            List<Entities.Credit> credits = await _context
-                .Credits
-                .Where(e => e.AccountId == id)
-                .ToListAsync();
-
-            List<Entities.Debit> debits = await _context
-                .Debits
-                .Where(e => e.AccountId == id)
-                .ToListAsync();
-
-            List<ITransaction> transactions = new List<ITransaction>();
-
-            foreach (Entities.Credit transactionData in credits)
-            {
-                Credit transaction = Credit.Load(
-                    transactionData.Id,
-                    transactionData.AccountId,
-                    transactionData.Amount,
-                    transactionData.TransactionDate);
-
-                transactions.Add(transaction);
-            }
-
-            foreach (Entities.Debit transactionData in debits)
-            {
-                Debit transaction = Debit.Load(
-                    transactionData.Id,
-                    transactionData.AccountId,
-                    transactionData.Amount,
-                    transactionData.TransactionDate);
-
-                transactions.Add(transaction);
-            }
-
-            var orderedTransactions = transactions.OrderBy(o => o.TransactionDate).ToList();
-
-            TransactionCollection transactionCollection = new TransactionCollection();
-            transactionCollection.Add(orderedTransactions);
-
-            Account result = Account.Load(
-                account.Id,
-                account.CustomerId,
-                transactionCollection);
-
-            return result;
-        }
-
-        public async Task Update(Account account, Credit credit)
-        {
-            Entities.Credit creditEntity = new Entities.Credit
-            {
-                AccountId = credit.AccountId,
-                Amount = credit.Amount,
-                Id = credit.Id,
-                TransactionDate = credit.TransactionDate
-            };
-
-            await _context.Credits.AddAsync(creditEntity);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task Update(Account account, Debit debit)
-        {
-            Entities.Debit debitEntity = new Entities.Debit
-            {
-                AccountId = debit.AccountId,
-                Amount = debit.Amount,
-                Id = debit.Id,
-                TransactionDate = debit.TransactionDate
-            };
-
-            await _context.Debits.AddAsync(debitEntity);
-            await _context.SaveChangesAsync();
-        }
+        await _context.Debits.AddAsync(debitEntity);
+        await _context.SaveChangesAsync();
     }
 }

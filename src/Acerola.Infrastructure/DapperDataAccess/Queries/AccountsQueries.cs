@@ -1,81 +1,67 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
+using Acerola.Application.Queries;
+using Acerola.Application.Results;
+using Acerola.Domain.Accounts;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
-namespace Acerola.Infrastructure.DapperDataAccess.Queries
+namespace Acerola.Infrastructure.DapperDataAccess.Queries;
+
+public class AccountsQueries(string connectionString)
+    : IAccountsQueries
 {
-    using Dapper;
-    using Acerola.Domain.Accounts;
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Data.SqlClient;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Acerola.Application.Queries;
-    using Acerola.Application.Results;
-
-    public class AccountsQueries : IAccountsQueries
+    public async Task<AccountResult?> GetAccount(Guid accountId)
     {
-        private readonly string _connectionString;
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string accountSQL = 
+            "SELECT * FROM Account WHERE Id = @accountId";
+        
+        Entities.Account? account = await db
+            .QueryFirstOrDefaultAsync<Entities.Account>(accountSQL, new { accountId });
 
-        public AccountsQueries(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        if (account == null)
+            return null;
 
-        public async Task<AccountResult> GetAccount(Guid accountId)
+        const string credits = 
+            "SELECT * FROM [Credit] WHERE AccountId = @accountId";
+
+        List<ITransaction> transactionsList = [];
+
+        using (var reader = await db.ExecuteReaderAsync(credits, new { accountId }))
         {
-            using (IDbConnection db = new SqlConnection(_connectionString))
+            var parser = reader.GetRowParser<Credit>();
+
+            while (reader.Read())
             {
-                string accountSQL = @"SELECT * FROM Account WHERE Id = @accountId";
-                Entities.Account account = await db
-                    .QueryFirstOrDefaultAsync<Entities.Account>(accountSQL, new { accountId });
-
-                if (account == null)
-                    return null;
-
-                string credits =
-                    @"SELECT * FROM [Credit]
-                      WHERE AccountId = @accountId";
-
-                List<ITransaction> transactionsList = new List<ITransaction>();
-
-                using (var reader = db.ExecuteReader(credits, new { accountId }))
-                {
-                    var parser = reader.GetRowParser<Credit>();
-
-                    while (reader.Read())
-                    {
-                        ITransaction transaction = parser(reader);
-                        transactionsList.Add(transaction);
-                    }
-                }
-
-                string debits =
-                    @"SELECT * FROM [Debit]
-                      WHERE AccountId = @accountId";
-
-                using (var reader = db.ExecuteReader(debits, new { accountId }))
-                {
-                    var parser = reader.GetRowParser<Debit>();
-
-                    while (reader.Read())
-                    {
-                        ITransaction transaction = parser(reader);
-                        transactionsList.Add(transaction);
-                    }
-                }
-
-                TransactionCollection transactionCollection = new TransactionCollection();
-
-                foreach (var item in transactionsList.OrderBy(e => e.TransactionDate))
-                {
-                    transactionCollection.Add(item);
-                }
-
-                Account result = Account.Load(account.Id, account.CustomerId, transactionCollection);
-                AccountResult accountResult = new AccountResult(result);
-                return accountResult;
+                ITransaction transaction = parser(reader);
+                transactionsList.Add(transaction);
             }
         }
+
+        const string debits = 
+            "SELECT * FROM [Debit] WHERE AccountId = @accountId";
+
+        using (var reader = await db.ExecuteReaderAsync(debits, new { accountId }))
+        {
+            var parser = reader.GetRowParser<Debit>();
+
+            while (reader.Read())
+            {
+                ITransaction transaction = parser(reader);
+                transactionsList.Add(transaction);
+            }
+        }
+
+        TransactionCollection transactionCollection = new();
+
+        foreach (var item in transactionsList.OrderBy(e => e.TransactionDate))
+        {
+            transactionCollection.Add(item);
+        }
+
+        Account result = Account.Load(account.Id, account.CustomerId, transactionCollection);
+        AccountResult accountResult = new(result);
+        return accountResult;
     }
 }

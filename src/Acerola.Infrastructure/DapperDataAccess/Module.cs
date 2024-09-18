@@ -1,21 +1,18 @@
-﻿namespace Acerola.Infrastructure.DapperDataAccess
+﻿using Autofac;
+
+namespace Acerola.Infrastructure.DapperDataAccess;
+
+public class Module : Autofac.Module
 {
-    using Autofac;
+    public string ConnectionString { get; set; }
 
-    public class Module : Autofac.Module
+    protected override void Load(ContainerBuilder builder)
     {
-        public string ConnectionString { get; set; }
-
-        protected override void Load(ContainerBuilder builder)
-        {
-            //
-            // Register all Types in MongoDataAccess namespace
-            //
-            builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
-                .Where(type => type.Namespace.Contains("DapperDataAccess"))
-                .WithParameter("connectionString", ConnectionString)
-                .AsImplementedInterfaces()
-                .InstancePerLifetimeScope();
-        }
+        // Register all Types in MongoDataAccess namespace
+        builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
+            .Where(type => type.Namespace.Contains("DapperDataAccess"))
+            .WithParameter("connectionString", ConnectionString)
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope();
     }
 }

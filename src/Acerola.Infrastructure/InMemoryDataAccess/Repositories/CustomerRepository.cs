@@ -1,43 +1,31 @@
-﻿namespace Acerola.Infrastructure.InMemoryDataAccess.Repositories
+﻿using Acerola.Application.Repositories;
+using Acerola.Domain.Customers;
+
+namespace Acerola.Infrastructure.InMemoryDataAccess.Repositories;
+
+public class CustomerRepository(Context context)
+    : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository
 {
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Customers;
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-
-    public class CustomerRepository : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository
+    public async Task Add(Customer customer)
     {
-        private readonly Context _context;
+        context.Customers.Add(customer);
+        await Task.CompletedTask;
+    }
 
-        public CustomerRepository(Context context)
-        {
-            _context = context;
-        }
+    public async Task<Customer?> Get(Guid id)
+    {
+        Customer? customer = context.Customers
+            .SingleOrDefault(e => e.Id == id);
 
-        public async Task Add(Customer customer)
-        {
-            _context.Customers.Add(customer);
-            await Task.CompletedTask;
-        }
+        return await Task.FromResult<Customer>(customer);
+    }
 
-        public async Task<Customer> Get(Guid id)
-        {
-            Customer customer = _context.Customers
-                .Where(e => e.Id == id)
-                .SingleOrDefault();
+    public async Task Update(Customer customer)
+    {
+        Customer? customerOld = context.Customers
+            .SingleOrDefault(e => e.Id == customer.Id);
 
-            return await Task.FromResult<Customer>(customer);
-        }
-
-        public async Task Update(Customer customer)
-        {
-            Customer customerOld = _context.Customers
-                .Where(e => e.Id == customer.Id)
-                .SingleOrDefault();
-
-            customerOld = customer;
-            await Task.CompletedTask;
-        }
+        customerOld = customer;
+        await Task.CompletedTask;
     }
 }

@@ -1,18 +1,14 @@
-﻿namespace Acerola.Infrastructure.Modules
-{
-    using Autofac;
-    using Acerola.Application;
+﻿using Autofac;
 
-    public class ApplicationModule : Autofac.Module
+namespace Acerola.Infrastructure.Modules;
+
+public class ApplicationModule : Module
+{
+    protected override void Load(ContainerBuilder builder)
     {
-        protected override void Load(ContainerBuilder builder)
-        {
-            //
-            // Register all Types in Acerola.Application
-            //
-            builder.RegisterAssemblyTypes(typeof(ApplicationException).Assembly)
-                .AsImplementedInterfaces()
-                .InstancePerLifetimeScope();
-        }
+        // Register all Types in Acerola.Application
+        builder.RegisterAssemblyTypes(typeof(Application.ApplicationException).Assembly)
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope();
     }
 }

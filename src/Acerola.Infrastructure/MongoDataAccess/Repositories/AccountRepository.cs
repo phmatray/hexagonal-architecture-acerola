@@ -1,130 +1,119 @@
-﻿namespace Acerola.Infrastructure.MongoDataAccess.Repositories
+﻿using Acerola.Domain.Accounts;
+using Acerola.Application.Repositories;
+using MongoDB.Driver;
+
+namespace Acerola.Infrastructure.MongoDataAccess.Repositories;
+
+public class AccountRepository(Context context)
+    : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
 {
-    using Acerola.Domain.Accounts;
-    using Acerola.Application.Repositories;
-    using MongoDB.Driver;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Threading.Tasks;
-
-    public class AccountRepository : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
+    public async Task Add(Account account, Credit credit)
     {
-        private readonly Context _context;
-
-        public AccountRepository(Context context)
+        Entities.Account accountEntity = new()
         {
-            _context = context;
+            CustomerId = account.CustomerId,
+            Id = account.Id
+        };
+
+        Entities.Credit creditEntity = new()
+        {
+            AccountId = credit.AccountId,
+            Amount = credit.Amount,
+            Description = credit.Description,
+            Id = credit.Id,
+            TransactionDate = credit.TransactionDate
+        };
+
+        await context.Accounts.InsertOneAsync(accountEntity);
+        await context.Credits.InsertOneAsync(creditEntity);
+    }
+
+    public async Task Delete(Account account)
+    {
+        await context.Credits.DeleteOneAsync(e => e.AccountId == account.Id);
+        await context.Debits.DeleteOneAsync(e => e.AccountId == account.Id);
+        await context.Accounts.DeleteOneAsync(e => e.Id == account.Id);
+    }
+
+    public async Task<Account?> Get(Guid id)
+    {
+        Entities.Account account = await context
+            .Accounts
+            .Find(e => e.Id == id)
+            .SingleOrDefaultAsync();
+
+        List<Entities.Credit> credits = await context
+            .Credits
+            .Find(e => e.AccountId == id)
+            .ToListAsync();
+
+        List<Entities.Debit> debits = await context
+            .Debits
+            .Find(e => e.AccountId == id)
+            .ToListAsync();
+
+        List<ITransaction> transactions = new();
+
+        foreach (Entities.Credit transactionData in credits)
+        {
+            Credit transaction = Credit.Load(
+                transactionData.Id,
+                transactionData.AccountId,
+                transactionData.Amount,
+                transactionData.TransactionDate);
+
+            transactions.Add(transaction);
         }
 
-        public async Task Add(Account account, Credit credit)
+        foreach (Entities.Debit transactionData in debits)
         {
-            Entities.Account accountEntity = new Entities.Account()
-            {
-                CustomerId = account.CustomerId,
-                Id = account.Id
-            };
+            Debit transaction = Debit.Load(
+                transactionData.Id,
+                transactionData.AccountId,
+                transactionData.Amount,
+                transactionData.TransactionDate);
 
-            Entities.Credit creditEntity = new Entities.Credit()
-            {
-                AccountId = credit.AccountId,
-                Amount = credit.Amount,
-                Description = credit.Description,
-                Id = credit.Id,
-                TransactionDate = credit.TransactionDate
-            };
-
-            await _context.Accounts.InsertOneAsync(accountEntity);
-            await _context.Credits.InsertOneAsync(creditEntity);
+            transactions.Add(transaction);
         }
 
-        public async Task Delete(Account account)
+        var orderedTransactions = transactions.OrderBy(o => o.TransactionDate).ToList();
+
+        TransactionCollection transactionCollection = new();
+        transactionCollection.Add(orderedTransactions);
+
+        Account result = Account.Load(
+            account.Id,
+            account.CustomerId,
+            transactionCollection);
+
+        return result;
+    }
+
+    public async Task Update(Account account, Credit credit)
+    {
+        Entities.Credit creditEntity = new()
         {
-            await _context.Credits.DeleteOneAsync(e => e.AccountId == account.Id);
-            await _context.Debits.DeleteOneAsync(e => e.AccountId == account.Id);
-            await _context.Accounts.DeleteOneAsync(e => e.Id == account.Id);
-        }
+            AccountId = credit.AccountId,
+            Amount = credit.Amount,
+            Description = credit.Description,
+            Id = credit.Id,
+            TransactionDate = credit.TransactionDate
+        };
 
-        public async Task<Account> Get(Guid id)
+        await context.Credits.InsertOneAsync(creditEntity);
+    }
+
+    public async Task Update(Account account, Debit debit)
+    {
+        Entities.Debit debitEntity = new()
         {
-            Entities.Account account = await _context
-                .Accounts
-                .Find(e => e.Id == id)
-                .SingleOrDefaultAsync();
+            AccountId = debit.AccountId,
+            Amount = debit.Amount,
+            Description = debit.Description,
+            Id = debit.Id,
+            TransactionDate = debit.TransactionDate
+        };
 
-            List<Entities.Credit> credits = await _context
-                .Credits
-                .Find(e => e.AccountId == id)
-                .ToListAsync();
-
-            List<Entities.Debit> debits = await _context
-                .Debits
-                .Find(e => e.AccountId == id)
-                .ToListAsync();
-
-            List<ITransaction> transactions = new List<ITransaction>();
-
-            foreach (Entities.Credit transactionData in credits)
-            {
-                Credit transaction = Credit.Load(
-                    transactionData.Id,
-                    transactionData.AccountId,
-                    transactionData.Amount,
-                    transactionData.TransactionDate);
-
-                transactions.Add(transaction);
-            }
-
-            foreach (Entities.Debit transactionData in debits)
-            {
-                Debit transaction = Debit.Load(
-                    transactionData.Id,
-                    transactionData.AccountId,
-                    transactionData.Amount,
-                    transactionData.TransactionDate);
-
-                transactions.Add(transaction);
-            }
-
-            var orderedTransactions = transactions.OrderBy(o => o.TransactionDate).ToList();
-
-            TransactionCollection transactionCollection = new TransactionCollection();
-            transactionCollection.Add(orderedTransactions);
-
-            Account result = Account.Load(
-                account.Id,
-                account.CustomerId,
-                transactionCollection);
-
-            return result;
-        }
-
-        public async Task Update(Account account, Credit credit)
-        {
-            Entities.Credit creditEntity = new Entities.Credit
-            {
-                AccountId = credit.AccountId,
-                Amount = credit.Amount,
-                Description = credit.Description,
-                Id = credit.Id,
-                TransactionDate = credit.TransactionDate
-            };
-
-            await _context.Credits.InsertOneAsync(creditEntity);
-        }
-
-        public async Task Update(Account account, Debit debit)
-        {
-            Entities.Debit debitEntity = new Entities.Debit
-            {
-                AccountId = debit.AccountId,
-                Amount = debit.Amount,
-                Description = debit.Description,
-                Id = debit.Id,
-                TransactionDate = debit.TransactionDate
-            };
-
-            await _context.Debits.InsertOneAsync(debitEntity);
-        }
+        await context.Debits.InsertOneAsync(debitEntity);
     }
 }

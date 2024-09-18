@@ -1,78 +1,71 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Acerola.Application.Repositories;
+using Acerola.Domain.Customers;
+using System.Data;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
-namespace Acerola.Infrastructure.DapperDataAccess.Repositories
+namespace Acerola.Infrastructure.DapperDataAccess.Repositories;
+
+public class CustomerReadOnlyRepository(string connectionString)
+    : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository
 {
-    using Dapper;
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Customers;
-    using System;
-    using System.Data;
-    using System.Data.SqlClient;
-    using System.Threading.Tasks;
-    using System.Collections.Generic;
-
-    public class CustomerReadOnlyRepository : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository
+    public async Task Add(Customer customer)
     {
-        private readonly string _connectionString;
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string insertCustomerSQL =
+            "INSERT INTO Customer (Id, Name, SSN) VALUES (@Id, @Name, @SSN)";
+        
+        DynamicParameters customerParameters = new();
+        customerParameters.Add("@id", customer.Id);
+        customerParameters.Add("@name", (string)customer.Name, DbType.AnsiString);
+        customerParameters.Add("@SSN", (string)customer.SSN, DbType.AnsiString);
 
-        public CustomerReadOnlyRepository(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        await db.ExecuteAsync(insertCustomerSQL, customerParameters);
+    }
 
-        public async Task Add(Customer customer)
-        {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string insertCustomerSQL = "INSERT INTO Customer (Id, Name, SSN) VALUES (@Id, @Name, @SSN)";
-                DynamicParameters customerParameters = new DynamicParameters();
-                customerParameters.Add("@id", customer.Id);
-                customerParameters.Add("@name", (string)customer.Name, DbType.AnsiString);
-                customerParameters.Add("@SSN", (string)customer.SSN, DbType.AnsiString);
+    public async Task<Customer?> Get(Guid id)
+    {
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string customerSQL = 
+            "SELECT * FROM Customer WHERE Id = @Id";
 
-                int customerRows = await db.ExecuteAsync(insertCustomerSQL, customerParameters);
-            }
-        }
-
-        public async Task<Customer> Get(Guid id)
-        {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string customerSQL = "SELECT * FROM Customer WHERE Id = @Id";
-                Entities.Customer customer = await db
-                    .QueryFirstOrDefaultAsync<Entities.Customer>(customerSQL, new { id });
+        Entities.Customer? customer = await db
+            .QueryFirstOrDefaultAsync<Entities.Customer>(customerSQL, new { id });
 					
-				if (customer == null)
-                    return null;
+        if (customer == null)
+            return null;
 
-                string accountSQL = "SELECT * FROM Account WHERE CustomerId = @Id";
-                IEnumerable<Guid> accounts = await db
-                    .QueryAsync<Guid>(accountSQL, new { id });
+        const string accountSQL = 
+            "SELECT * FROM Account WHERE CustomerId = @Id";
 
-                AccountCollection accountCollection = new AccountCollection();
+        IEnumerable<Guid> accounts = await db
+            .QueryAsync<Guid>(accountSQL, new { id });
 
-                foreach (Guid accountId in accounts)
-                {
-                    accountCollection.Add(accountId);
-                }
+        AccountCollection accountCollection = new();
 
-                Customer result = Customer.Load(
-                    customer.Id,
-                    customer.Name,
-                    customer.SSN,
-                    accountCollection);
-
-                return result;
-            }
-        }
-
-        public async Task Update(Customer customer)
+        foreach (Guid accountId in accounts)
         {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string updateCustomerSQL = "UPDATE Customer SET Name = @Name, SSN = @SSN WHERE Id = @Id";
-                int rowsAffected = await db.ExecuteAsync(updateCustomerSQL, customer);
-            }
+            accountCollection.Add(accountId);
         }
+
+        Customer result = Customer.Load(
+            customer.Id,
+            customer.Name,
+            customer.SSN,
+            accountCollection);
+
+        return result;
+    }
+
+    public async Task Update(Customer customer)
+    {
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string updateCustomerSQL = 
+            "UPDATE Customer SET Name = @Name, SSN = @SSN WHERE Id = @Id";
+            
+        await db.ExecuteAsync(updateCustomerSQL, customer);
     }
 }

@@ -1,56 +1,45 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using System.Data;
+using Acerola.Application.Queries;
+using Acerola.Application.Results;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
-namespace Acerola.Infrastructure.DapperDataAccess.Queries
+namespace Acerola.Infrastructure.DapperDataAccess.Queries;
+
+public class CustomersQueries(string connectionString, IAccountsQueries accountsQueries)
+    : ICustomersQueries
 {
-    using Dapper;
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Data.SqlClient;
-    using System.Threading.Tasks;
-    using Acerola.Application.Queries;
-    using Acerola.Application.Results;
-
-    public class CustomersQueries : ICustomersQueries
+    public async Task<CustomerResult?> GetCustomer(Guid customerId)
     {
-        private readonly string _connectionString;
-        private readonly IAccountsQueries _accountsQueries;
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string customerSQL = 
+            "SELECT * FROM Customer WHERE Id = @customerId";
+            
+        Entities.Customer? customer = await db
+            .QueryFirstOrDefaultAsync<Entities.Customer>(customerSQL, new { customerId });
 
-        public CustomersQueries(string connectionString, IAccountsQueries accountsQueries)
+        if (customer == null)
+            return null;
+
+        const string accountSQL = 
+            "SELECT id FROM Account WHERE CustomerId = @customerId";
+            
+        IEnumerable<Guid> accounts = await db
+            .QueryAsync<Guid>(accountSQL, new { customerId });
+
+        List<AccountResult> accountCollection = [];
+
+        foreach (Guid accountId in accounts)
         {
-            _connectionString = connectionString;
-            _accountsQueries = accountsQueries;
+            accountCollection.Add(await accountsQueries.GetAccount(accountId));
         }
 
-        public async Task<CustomerResult> GetCustomer(Guid customerId)
-        {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string customerSQL = "SELECT * FROM Customer WHERE Id = @customerId";
-                Entities.Customer customer = await db
-                    .QueryFirstOrDefaultAsync<Entities.Customer>(customerSQL, new { customerId });
+        CustomerResult customerResult = new(customer.Id,
+            customer.Name,
+            customer.SSN,
+            accountCollection);
 
-                if (customer == null)
-                    return null;
-
-                string accountSQL = "SELECT id FROM Account WHERE CustomerId = @customerId";
-                IEnumerable<Guid> accounts = await db
-                    .QueryAsync<Guid>(accountSQL, new { customerId });
-
-                List<AccountResult> accountCollection = new List<AccountResult>();
-
-                foreach (Guid accountId in accounts)
-                {
-                    accountCollection.Add(await _accountsQueries.GetAccount(accountId));
-                }
-
-                CustomerResult customerResult = new CustomerResult(customer.Id,
-                    customer.Name,
-                    customer.SSN,
-                    accountCollection);
-
-                return customerResult;
-            }
-        }
+        return customerResult;
     }
 }

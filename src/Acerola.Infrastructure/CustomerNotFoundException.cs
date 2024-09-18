@@ -1,9 +1,8 @@
-﻿namespace Acerola.Infrastructure
+﻿namespace Acerola.Infrastructure;
+
+public class CustomerNotFoundException : InfrastructureException
 {
-    public class CustomerNotFoundException : InfrastructureException
-    {
-        internal CustomerNotFoundException(string message)
-            : base(message)
-        { }
-    }
+    internal CustomerNotFoundException(string message)
+        : base(message)
+    { }
 }

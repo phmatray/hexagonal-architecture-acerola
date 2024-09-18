@@ -1,63 +1,53 @@
-﻿namespace Acerola.Infrastructure.MongoDataAccess.Repositories
+﻿using Acerola.Application.Repositories;
+using Acerola.Domain.Customers;
+using MongoDB.Driver;
+
+namespace Acerola.Infrastructure.MongoDataAccess.Repositories;
+
+public class CustomerRepository(Context context)
+    : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository
 {
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Customers;
-    using MongoDB.Driver;
-    using System;
-    using System.Collections.Generic;
-    using System.Threading.Tasks;
-
-    public class CustomerRepository : ICustomerReadOnlyRepository, ICustomerWriteOnlyRepository
+    public async Task<Customer?> Get(Guid customerId)
     {
-        private readonly Context _context;
+        Entities.Customer customer = await context.Customers
+            .Find(e => e.Id == customerId)
+            .SingleOrDefaultAsync();
 
-        public CustomerRepository(Context context)
+        List<Guid> accounts = await context.Accounts
+            .Find(e => e.CustomerId == customerId)
+            .Project(p => p.Id)
+            .ToListAsync();
+
+        AccountCollection accountCollection = new();
+        foreach (var accountId in accounts)
+            accountCollection.Add(accountId);
+
+        return Customer.Load(customer.Id, customer.Name, customer.SSN, accountCollection);
+    }
+
+    public async Task Add(Customer customer)
+    {
+        Entities.Customer customerEntity = new()
         {
-            _context = context;
-        }
+            Id = customer.Id,
+            Name = customer.Name,
+            SSN = customer.SSN
+        };
 
-        public async Task<Customer> Get(Guid customerId)
+        await context.Customers
+            .InsertOneAsync(customerEntity);
+    }
+
+    public async Task Update(Customer customer)
+    {
+        Entities.Customer customerEntity = new()
         {
-            Entities.Customer customer = await _context.Customers
-                .Find(e => e.Id == customerId)
-                .SingleOrDefaultAsync();
+            Id = customer.Id,
+            Name = customer.Name,
+            SSN = customer.SSN
+        };
 
-            List<Guid> accounts = await _context.Accounts
-                .Find(e => e.CustomerId == customerId)
-                .Project(p => p.Id)
-                .ToListAsync();
-
-            AccountCollection accountCollection = new AccountCollection();
-            foreach (var accountId in accounts)
-                accountCollection.Add(accountId);
-
-            return Customer.Load(customer.Id, customer.Name, customer.SSN, accountCollection);
-        }
-
-        public async Task Add(Customer customer)
-        {
-            Entities.Customer customerEntity = new Entities.Customer()
-            {
-                Id = customer.Id,
-                Name = customer.Name,
-                SSN = customer.SSN
-            };
-
-            await _context.Customers
-                .InsertOneAsync(customerEntity);
-        }
-
-        public async Task Update(Customer customer)
-        {
-            Entities.Customer customerEntity = new Entities.Customer()
-            {
-                Id = customer.Id,
-                Name = customer.Name,
-                SSN = customer.SSN
-            };
-
-            await _context.Customers
-                .ReplaceOneAsync(e => e.Id == customer.Id, customerEntity);
-        }
+        await context.Customers
+            .ReplaceOneAsync(e => e.Id == customer.Id, customerEntity);
     }
 }

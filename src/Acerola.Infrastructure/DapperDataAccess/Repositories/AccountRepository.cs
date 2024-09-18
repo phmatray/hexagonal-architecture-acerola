@@ -1,150 +1,145 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Acerola.Application.Repositories;
+using Acerola.Domain.Accounts;
+using System.Data;
+using Dapper;
+using Microsoft.Data.SqlClient;
 
-namespace Acerola.Infrastructure.DapperDataAccess.Repositories
+namespace Acerola.Infrastructure.DapperDataAccess.Repositories;
+
+public class AccountRepository(string connectionString)
+    : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
 {
-    using Dapper;
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Accounts;
-    using System;
-    using System.Collections.Generic;
-    using System.Data;
-    using System.Data.SqlClient;
-    using System.Linq;
-    using System.Threading.Tasks;
-
-    public class AccountRepository : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
+    public async Task Add(Account account, Credit credit)
     {
-        private readonly string _connectionString;
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string insertAccountSQL = 
+            "INSERT INTO Account (Id, CustomerId) VALUES (@Id, @CustomerId)";
 
-        public AccountRepository(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        DynamicParameters accountParameters = new();
+        accountParameters.Add("@id", account.Id);
+        accountParameters.Add("@customerId", account.CustomerId);
 
-        public async Task Add(Account account, Credit credit)
+        await db.ExecuteAsync(insertAccountSQL, accountParameters);
+
+        const string insertCreditSQL =
+            """
+            INSERT INTO [Credit] (Id, Amount, TransactionDate, AccountId) 
+            VALUES (@Id, @Amount, @TransactionDate, @AccountId)
+            """;
+
+        DynamicParameters transactionParameters = new();
+        transactionParameters.Add("@id", credit.Id);
+        transactionParameters.Add("@amount", (double)credit.Amount);
+        transactionParameters.Add("@transactionDate", credit.TransactionDate);
+        transactionParameters.Add("@accountId", credit.AccountId);
+
+        await db.ExecuteAsync(insertCreditSQL, transactionParameters);
+    }
+
+    public async Task Delete(Account account)
+    {
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string deleteSQL =
+            """
+            DELETE FROM [Credit] WHERE AccountId = @Id;
+            DELETE FROM [Debit] WHERE AccountId = @Id;
+            DELETE FROM Account WHERE Id = @Id;
+            """;
+        
+        await db.ExecuteAsync(deleteSQL, account);
+    }
+
+    public async Task<Account?> Get(Guid id)
+    {
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string accountSQL =
+            "SELECT * FROM Account WHERE Id = @Id";
+            
+        Entities.Account? account = await db
+            .QueryFirstOrDefaultAsync<Entities.Account>(accountSQL, new { id });
+
+        if (account == null)
+            return null;
+
+        const string credits = 
+            "SELECT * FROM [Credit] WHERE AccountId = @Id";
+
+        List<ITransaction> transactionsList = [];
+
+        using (var reader = await db.ExecuteReaderAsync(credits, new { id }))
         {
-            using (IDbConnection db = new SqlConnection(_connectionString))
+            var parser = reader.GetRowParser<Credit>();
+
+            while (reader.Read())
             {
-                string insertAccountSQL = "INSERT INTO Account (Id, CustomerId) VALUES (@Id, @CustomerId)";
-
-                DynamicParameters accountParameters = new DynamicParameters();
-                accountParameters.Add("@id", account.Id);
-                accountParameters.Add("@customerId", account.CustomerId);
-
-                int accountRows = await db.ExecuteAsync(insertAccountSQL, accountParameters);
-                
-                string insertCreditSQL = "INSERT INTO [Credit] (Id, Amount, TransactionDate, AccountId) " +
-                    "VALUES (@Id, @Amount, @TransactionDate, @AccountId)";
-
-                DynamicParameters transactionParameters = new DynamicParameters();
-                transactionParameters.Add("@id", credit.Id);
-                transactionParameters.Add("@amount", (double)credit.Amount);
-                transactionParameters.Add("@transactionDate", credit.TransactionDate);
-                transactionParameters.Add("@accountId", credit.AccountId);
-
-                int creditRows = await db.ExecuteAsync(insertCreditSQL, transactionParameters);
+                ITransaction transaction = parser(reader);
+                transactionsList.Add(transaction);
             }
         }
 
-        public async Task Delete(Account account)
+        const string debits =
+            "SELECT * FROM [Debit] WHERE AccountId = @Id";
+
+        using (var reader = await db.ExecuteReaderAsync(debits, new { id }))
         {
-            using (IDbConnection db = new SqlConnection(_connectionString))
+            var parser = reader.GetRowParser<Debit>();
+
+            while (reader.Read())
             {
-                string deleteSQL =
-                    @"DELETE FROM [Credit] WHERE AccountId = @Id;
-                      DELETE FROM [Debit] WHERE AccountId = @Id;
-                      DELETE FROM Account WHERE Id = @Id;";
-                int rowsAffected = await db.ExecuteAsync(deleteSQL, account);
+                ITransaction transaction = parser(reader);
+                transactionsList.Add(transaction);
             }
         }
 
-        public async Task<Account> Get(Guid id)
+        TransactionCollection transactionCollection = new();
+
+        foreach (var item in transactionsList.OrderBy(e => e.TransactionDate))
         {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string accountSQL = @"SELECT * FROM Account WHERE Id = @Id";
-                Entities.Account account = await db
-                    .QueryFirstOrDefaultAsync<Entities.Account>(accountSQL, new { id });
-
-                if (account == null)
-                    return null;
-
-                string credits =
-                    @"SELECT * FROM [Credit]
-                      WHERE AccountId = @Id";
-
-                List<ITransaction> transactionsList = new List<ITransaction>();
-
-                using (var reader = db.ExecuteReader(credits, new { id }))
-                {
-                    var parser = reader.GetRowParser<Credit>();
-
-                    while (reader.Read())
-                    {
-                        ITransaction transaction = parser(reader);
-                        transactionsList.Add(transaction);
-                    }
-                }
-
-                string debits =
-                    @"SELECT * FROM [Debit]
-                      WHERE AccountId = @Id";
-
-                using (var reader = db.ExecuteReader(debits, new { id }))
-                {
-                    var parser = reader.GetRowParser<Debit>();
-
-                    while (reader.Read())
-                    {
-                        ITransaction transaction = parser(reader);
-                        transactionsList.Add(transaction);
-                    }
-                }
-
-                TransactionCollection transactionCollection = new TransactionCollection();
-
-                foreach (var item in transactionsList.OrderBy(e => e.TransactionDate))
-                {
-                    transactionCollection.Add(item);
-                }
-
-                Account result = Account.Load(account.Id, account.CustomerId, transactionCollection);
-                return result;
-            }
+            transactionCollection.Add(item);
         }
 
-        public async Task Update(Account account, Credit credit)
-        {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string insertCreditSQL = "INSERT INTO [Credit] (Id, Amount, TransactionDate, AccountId) " +
-                    "VALUES (@Id, @Amount, @TransactionDate, @AccountId)";
+        Account result = Account.Load(account.Id, account.CustomerId, transactionCollection);
+        return result;
+    }
 
-                DynamicParameters transactionParameters = new DynamicParameters();
-                transactionParameters.Add("@id", credit.Id);
-                transactionParameters.Add("@amount", (double)credit.Amount);
-                transactionParameters.Add("@transactionDate", credit.TransactionDate);
-                transactionParameters.Add("@accountId", credit.AccountId);
+    public async Task Update(Account account, Credit credit)
+    {
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string insertCreditSQL =
+            """
+            INSERT INTO [Credit] (Id, Amount, TransactionDate, AccountId)
+            VALUES (@Id, @Amount, @TransactionDate, @AccountId)
+            """;
 
-                int creditRows = await db.ExecuteAsync(insertCreditSQL, transactionParameters);
-            }
-        }
+        DynamicParameters transactionParameters = new();
+        transactionParameters.Add("@id", credit.Id);
+        transactionParameters.Add("@amount", (double)credit.Amount);
+        transactionParameters.Add("@transactionDate", credit.TransactionDate);
+        transactionParameters.Add("@accountId", credit.AccountId);
 
-        public async Task Update(Account account, Debit debit)
-        {
-            using (IDbConnection db = new SqlConnection(_connectionString))
-            {
-                string insertDebitSQL = "INSERT INTO [Debit] (Id, Amount, TransactionDate, AccountId) " +
-                    "VALUES (@Id, @Amount, @TransactionDate, @AccountId)";
+        await db.ExecuteAsync(insertCreditSQL, transactionParameters);
+    }
 
-                DynamicParameters transactionParameters = new DynamicParameters();
-                transactionParameters.Add("@id", debit.Id);
-                transactionParameters.Add("@amount", (double)debit.Amount);
-                transactionParameters.Add("@transactionDate", debit.TransactionDate);
-                transactionParameters.Add("@accountId", debit.AccountId);
+    public async Task Update(Account account, Debit debit)
+    {
+        using IDbConnection db = new SqlConnection(connectionString);
+        
+        const string insertDebitSQL =
+            """
+            INSERT INTO [Debit] (Id, Amount, TransactionDate, AccountId) 
+            VALUES (@Id, @Amount, @TransactionDate, @AccountId)
+            """;
 
-                int debitRows = await db.ExecuteAsync(insertDebitSQL, transactionParameters);
-            }
-        }
+        DynamicParameters transactionParameters = new();
+        transactionParameters.Add("@id", debit.Id);
+        transactionParameters.Add("@amount", (double)debit.Amount);
+        transactionParameters.Add("@transactionDate", debit.TransactionDate);
+        transactionParameters.Add("@accountId", debit.AccountId);
+
+        await db.ExecuteAsync(insertDebitSQL, transactionParameters);
     }
 }

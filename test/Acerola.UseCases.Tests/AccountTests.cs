@@ -1,85 +1,74 @@
-namespace Acerola.UseCases.Tests
+using Acerola.Domain.Customers;
+using Acerola.Application.Commands.Deposit;
+using Acerola.Domain.Accounts;
+
+namespace Acerola.UseCases.Tests;
+
+public class AccountTests
 {
-    using Xunit;
-    using Acerola.Domain.Customers;
-    using NSubstitute;
-    using System;
-    using Acerola.Application.Commands.Register;
-    using Acerola.Application.Commands.Deposit;
-    using Acerola.Domain.Accounts;
-    using Acerola.Application.Repositories;
+    public readonly IAccountReadOnlyRepository AccountReadOnlyRepository
+        = Substitute.For<IAccountReadOnlyRepository>();
+    
+    public readonly IAccountWriteOnlyRepository AccountWriteOnlyRepository
+        = Substitute.For<IAccountWriteOnlyRepository>();
+    
+    public readonly ICustomerReadOnlyRepository CustomerReadOnlyRepository
+        = Substitute.For<ICustomerReadOnlyRepository>();
+    
+    public readonly ICustomerWriteOnlyRepository CustomerWriteOnlyRepository
+        = Substitute.For<ICustomerWriteOnlyRepository>();
 
-    public class AccountTests
+    [Theory]
+    [InlineData("08724050601", "Ivan Paulovich", 300)]
+    [InlineData("08724050601", "Ivan Paulovich Pinheiro Gomes", 100)]
+    [InlineData("08724050601", "Ivan Paulovich", 500)]
+    [InlineData("08724050601", "Ivan Paulovich", 100)]
+    public async Task Register_Valid_User_Account(string personnummer, string name, double amount)
     {
-        public IAccountReadOnlyRepository accountReadOnlyRepository;
-        public IAccountWriteOnlyRepository accountWriteOnlyRepository;
-        public ICustomerReadOnlyRepository customerReadOnlyRepository;
-        public ICustomerWriteOnlyRepository customerWriteOnlyRepository;
+        var registerUseCase = new RegisterUseCase(
+            CustomerWriteOnlyRepository,
+            AccountWriteOnlyRepository
+        );
 
-        public AccountTests()
-        {
-            accountReadOnlyRepository = Substitute.For<IAccountReadOnlyRepository>();
-            accountWriteOnlyRepository = Substitute.For<IAccountWriteOnlyRepository>();
-            customerReadOnlyRepository = Substitute.For<ICustomerReadOnlyRepository>();
-            customerWriteOnlyRepository = Substitute.For<ICustomerWriteOnlyRepository>();
-        }
+        RegisterResult result = await registerUseCase
+            .Execute(personnummer, name, amount);
 
-        [Theory]
-        [InlineData("08724050601", "Ivan Paulovich", 300)]
-        [InlineData("08724050601", "Ivan Paulovich Pinheiro Gomes", 100)]
-        [InlineData("08724050601", "Ivan Paulovich", 500)]
-        [InlineData("08724050601", "Ivan Paulovich", 100)]
-        public async void Register_Valid_User_Account(string personnummer, string name, double amount)
-        {
-            var registerUseCase = new RegisterUseCase(
-                customerWriteOnlyRepository,
-                accountWriteOnlyRepository
-            );
+        Assert.Equal(personnummer, result.Customer.Personnummer);
+        Assert.Equal(name, result.Customer.Name);
+        Assert.True(Guid.Empty != result.Customer.CustomerId);
+        Assert.True(Guid.Empty != result.Account.AccountId);
+    }
 
-            RegisterResult result = await registerUseCase.Execute(
-                personnummer,
-                name,
-                amount);
+    [Theory]
+    [InlineData("c725315a-1de6-4bf7-aecf-3af8f0083681", 100)]
+    public async Task Deposit_Valid_Amount(string accountId, double amount)
+    {
+        var account = new Account(Guid.NewGuid());
+        var customer = new Customer("08724050601", "Ivan Paulovich");
 
-            Assert.Equal(personnummer, result.Customer.Personnummer);
-            Assert.Equal(name, result.Customer.Name);
-            Assert.True(Guid.Empty != result.Customer.CustomerId);
-            Assert.True(Guid.Empty != result.Account.AccountId);
-        }
+        AccountReadOnlyRepository
+            .Get(Guid.Parse(accountId))
+            .Returns(account);
 
+        var depositUseCase = new DepositUseCase(
+            AccountReadOnlyRepository,
+            AccountWriteOnlyRepository
+        );
 
-        [Theory]
-        [InlineData("c725315a-1de6-4bf7-aecf-3af8f0083681", 100)]
-        public async void Deposit_Valid_Amount(string accountId, double amount)
-        {
-            var account = new Account(Guid.NewGuid());
-            var customer = new Customer("08724050601", "Ivan Paulovich");
+        DepositResult result = await depositUseCase
+            .Execute(Guid.Parse(accountId), amount);
 
-            accountReadOnlyRepository
-                .Get(Guid.Parse(accountId))
-                .Returns(account);
+        Assert.Equal(amount, result.Transaction.Amount);
+    }
 
-            var depositUseCase = new DepositUseCase(
-                accountReadOnlyRepository,
-                accountWriteOnlyRepository
-            );
+    [Theory]
+    [InlineData(100)]
+    public void Account_With_Credits_Should_Not_Allow_Close(double amount)
+    {
+        var account = new Account(Guid.NewGuid());
+        account.Deposit(amount);
 
-            DepositResult result = await depositUseCase.Execute(
-                Guid.Parse(accountId),
-                amount);
-
-            Assert.Equal(amount, result.Transaction.Amount);
-        }
-
-        [Theory]
-        [InlineData(100)]
-        public void Account_With_Credits_Should_Not_Allow_Close(double amount)
-        {
-            var account = new Account(Guid.NewGuid());
-            account.Deposit(amount);
-
-            Assert.Throws<AccountCannotBeClosedException>(
-                () => account.Close());
-        }
+        Assert.Throws<AccountCannotBeClosedException>(
+            () => account.Close());
     }
 }

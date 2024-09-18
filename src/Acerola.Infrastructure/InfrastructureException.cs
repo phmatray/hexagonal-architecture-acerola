@@ -1,11 +1,10 @@
-﻿namespace Acerola.Infrastructure
+﻿namespace Acerola.Infrastructure;
+
+using System;
+public class InfrastructureException : Exception
 {
-    using System;
-    public class InfrastructureException : Exception
+    internal InfrastructureException(string businessMessage)
+        : base(businessMessage)
     {
-        internal InfrastructureException(string businessMessage)
-               : base(businessMessage)
-        {
-        }
     }
 }

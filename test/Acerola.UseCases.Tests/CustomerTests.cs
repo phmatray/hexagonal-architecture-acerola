@@ -1,47 +1,37 @@
-namespace Acerola.UseCases.Tests
+namespace Acerola.UseCases.Tests;
+
+public class CustomerTests
 {
-    using Xunit;
-    using NSubstitute;
-    using System;
-    using Acerola.Application.Commands.Register;
-    using Acerola.Application.Repositories;
+    public readonly IAccountReadOnlyRepository AccountReadOnlyRepository
+        = Substitute.For<IAccountReadOnlyRepository>();
+    
+    public readonly IAccountWriteOnlyRepository AccountWriteOnlyRepository
+        = Substitute.For<IAccountWriteOnlyRepository>();
+    
+    public readonly ICustomerReadOnlyRepository CustomerReadOnlyRepository
+        = Substitute.For<ICustomerReadOnlyRepository>();
+    
+    public readonly ICustomerWriteOnlyRepository CustomerWriteOnlyRepository
+        = Substitute.For<ICustomerWriteOnlyRepository>();
 
-    public class CustomerTests
+    [Theory]
+    [InlineData("08724050601", "Ivan Paulovich", 300)]
+    [InlineData("08724050601", "Ivan Paulovich Pinheiro Gomes", 100)]
+    [InlineData("08724050601", "Ivan Paulovich", 500)]
+    [InlineData("08724050601", "Ivan Paulovich", 10000)]
+    public async Task Register_Valid_User_Account(string personnummer, string name, double amount)
     {
-        public IAccountReadOnlyRepository accountReadOnlyRepository;
-        public IAccountWriteOnlyRepository accountWriteOnlyRepository;
-        public ICustomerReadOnlyRepository customerReadOnlyRepository;
-        public ICustomerWriteOnlyRepository customerWriteOnlyRepository;
+        var registerUseCase = new RegisterUseCase(
+            CustomerWriteOnlyRepository,
+            AccountWriteOnlyRepository
+        );
 
-        public CustomerTests()
-        {
-            accountReadOnlyRepository = Substitute.For<IAccountReadOnlyRepository>();
-            accountWriteOnlyRepository = Substitute.For<IAccountWriteOnlyRepository>();
-            customerReadOnlyRepository = Substitute.For<ICustomerReadOnlyRepository>();
-            customerWriteOnlyRepository = Substitute.For<ICustomerWriteOnlyRepository>();
-        }
+        RegisterResult result = await registerUseCase
+            .Execute(personnummer, name, amount);
 
-        [Theory]
-        [InlineData("08724050601", "Ivan Paulovich", 300)]
-        [InlineData("08724050601", "Ivan Paulovich Pinheiro Gomes", 100)]
-        [InlineData("08724050601", "Ivan Paulovich", 500)]
-        [InlineData("08724050601", "Ivan Paulovich", 10000)]
-        public async void Register_Valid_User_Account(string personnummer, string name, double amount)
-        {
-            var registerUseCase = new RegisterUseCase(
-                customerWriteOnlyRepository,
-                accountWriteOnlyRepository
-            );
-
-            RegisterResult result = await registerUseCase.Execute(
-                personnummer,
-                name,
-                amount);
-
-            Assert.Equal(personnummer, result.Customer.Personnummer);
-            Assert.Equal(name, result.Customer.Name);
-            Assert.True(result.Customer.CustomerId != Guid.Empty);
-            Assert.True(result.Account.AccountId != Guid.Empty);
-        }
+        Assert.Equal(personnummer, result.Customer.Personnummer);
+        Assert.Equal(name, result.Customer.Name);
+        Assert.True(result.Customer.CustomerId != Guid.Empty);
+        Assert.True(result.Account.AccountId != Guid.Empty);
     }
 }

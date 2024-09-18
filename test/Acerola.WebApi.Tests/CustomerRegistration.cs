@@ -24,7 +24,7 @@ namespace Acerola.WebApi.Tests
                 .UseStartup<Startup>()
                 .ConfigureAppConfiguration((builderContext, config) =>
                 {
-                    IHostingEnvironment env = builderContext.HostingEnvironment;
+                    IWebHostEnvironment env = builderContext.HostingEnvironment;
                     config.AddJsonFile("autofac.json")
                     .AddEnvironmentVariables();
                 })

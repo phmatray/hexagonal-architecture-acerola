@@ -1,12 +1,9 @@
-﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess.Entities
-{
-    using System;
+﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess.Entities;
 
-    public class Debit
-    {
-        public Guid Id { get; set; }
-        public Guid AccountId { get; set; }
-        public double Amount { get; set; }
-        public DateTime TransactionDate { get; set; }
-    }
+public class Debit
+{
+    public Guid Id { get; set; }
+    public Guid AccountId { get; set; }
+    public double Amount { get; set; }
+    public DateTime TransactionDate { get; set; }
 }

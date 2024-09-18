@@ -1,74 +1,38 @@
-﻿namespace Acerola.Infrastructure.MongoDataAccess
+﻿using Acerola.Infrastructure.MongoDataAccess.Entities;
+using MongoDB.Bson.Serialization;
+using MongoDB.Driver;
+
+namespace Acerola.Infrastructure.MongoDataAccess;
+
+public class Context
 {
-    using Acerola.Infrastructure.MongoDataAccess.Entities;
-    using MongoDB.Bson.Serialization;
-    using MongoDB.Driver;
+    private readonly MongoClient _mongoClient;
+    private readonly IMongoDatabase _database;
 
-    public class Context
+    public Context(string connectionString, string databaseName)
     {
-        private readonly MongoClient mongoClient;
-        private readonly IMongoDatabase database;
+        _mongoClient = new MongoClient(connectionString);
+        _database = _mongoClient.GetDatabase(databaseName);
+        Map();
+    }
 
-        public Context(string connectionString, string databaseName)
-        {
-            this.mongoClient = new MongoClient(connectionString);
-            this.database = mongoClient.GetDatabase(databaseName);
-            Map();
-        }
+    public IMongoCollection<Customer> Customers
+        => _database.GetCollection<Customer>("Customers");
 
-        public IMongoCollection<Customer> Customers
-        {
-            get
-            {
-                return database.GetCollection<Customer>("Customers");
-            }
-        }
+    public IMongoCollection<Account> Accounts
+        => _database.GetCollection<Account>("Accounts");
 
-        public IMongoCollection<Account> Accounts
-        {
-            get
-            {
-                return database.GetCollection<Account>("Accounts");
-            }
-        }
+    public IMongoCollection<Credit> Credits
+        => _database.GetCollection<Credit>("Credits");
 
-        public IMongoCollection<Credit> Credits
-        {
-            get
-            {
-                return database.GetCollection<Credit>("Credits");
-            }
-        }
+    public IMongoCollection<Debit> Debits
+        => _database.GetCollection<Debit>("Debits");
 
-        public IMongoCollection<Debit> Debits
-        {
-            get
-            {
-                return database.GetCollection<Debit>("Debits");
-            }
-        }
-
-        private void Map()
-        {
-            BsonClassMap.RegisterClassMap<Account>(cm =>
-            {
-                cm.AutoMap();
-            });
-
-            BsonClassMap.RegisterClassMap<Credit>(cm =>
-            {
-                cm.AutoMap();
-            });
-
-            BsonClassMap.RegisterClassMap<Debit>(cm =>
-            {
-                cm.AutoMap();
-            });
-
-            BsonClassMap.RegisterClassMap<Customer>(cm =>
-            {
-                cm.AutoMap();
-            });
-        }
+    private static void Map()
+    {
+        BsonClassMap.RegisterClassMap<Account>(cm => { cm.AutoMap(); });
+        BsonClassMap.RegisterClassMap<Credit>(cm => { cm.AutoMap(); });
+        BsonClassMap.RegisterClassMap<Debit>(cm => { cm.AutoMap(); });
+        BsonClassMap.RegisterClassMap<Customer>(cm => { cm.AutoMap(); });
     }
 }

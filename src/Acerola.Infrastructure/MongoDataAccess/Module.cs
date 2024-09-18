@@ -1,27 +1,26 @@
-﻿namespace Acerola.Infrastructure.MongoDataAccess
+﻿using Autofac;
+
+namespace Acerola.Infrastructure.MongoDataAccess;
+
+public class Module : Autofac.Module
 {
-    using Autofac;
+    public string ConnectionString { get; set; }
+    public string DatabaseName { get; set; }
 
-    public class Module : Autofac.Module
+    protected override void Load(ContainerBuilder builder)
     {
-        public string ConnectionString { get; set; }
-        public string DatabaseName { get; set; }
+        builder.RegisterType<Context>()
+            .As<Context>()
+            .WithParameter("connectionString", ConnectionString)
+            .WithParameter("databaseName", DatabaseName)
+            .SingleInstance();
 
-        protected override void Load(ContainerBuilder builder)
-        {
-            builder.RegisterType<Context>()
-                .As<Context>()
-                .WithParameter("connectionString", ConnectionString)
-                .WithParameter("databaseName", DatabaseName)
-                .SingleInstance();
-
-            //
-            // Register all Types in MongoDataAccess namespace
-            //
-            builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
-                .Where(type => type.Namespace.Contains("MongoDataAccess"))
-                .AsImplementedInterfaces()
-                .InstancePerLifetimeScope();
-        }
+        //
+        // Register all Types in MongoDataAccess namespace
+        //
+        builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
+            .Where(type => type.Namespace.Contains("MongoDataAccess"))
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope();
     }
 }

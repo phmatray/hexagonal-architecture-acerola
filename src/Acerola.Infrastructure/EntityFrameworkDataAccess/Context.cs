@@ -1,32 +1,27 @@
-﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess
+﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess;
+
+using Microsoft.EntityFrameworkCore;
+
+public class Context(DbContextOptions options)
+    : DbContext(options)
 {
-    using Microsoft.EntityFrameworkCore;
+    public DbSet<Entities.Account> Accounts { get; set; }
+    public DbSet<Entities.Customer> Customers { get; set; }
+    public DbSet<Entities.Credit> Credits { get; set; }
+    public DbSet<Entities.Debit> Debits { get; set; }
 
-    public class Context : DbContext
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public Context(DbContextOptions options) : base(options)
-        {
+        modelBuilder.Entity<Entities.Account>()
+            .ToTable("Account");
 
-        }
+        modelBuilder.Entity<Entities.Customer>()
+            .ToTable("Customer");
 
-        public DbSet<Entities.Account> Accounts { get; set; }
-        public DbSet<Entities.Customer> Customers { get; set; }
-        public DbSet<Entities.Credit> Credits { get; set; }
-        public DbSet<Entities.Debit> Debits { get; set; }
+        modelBuilder.Entity<Entities.Debit>()
+            .ToTable("Debit");
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Entities.Account>()
-                .ToTable("Account");
-
-            modelBuilder.Entity<Entities.Customer>()
-                .ToTable("Customer");
-
-            modelBuilder.Entity<Entities.Debit>()
-                .ToTable("Debit");
-
-            modelBuilder.Entity<Entities.Credit>()
-                .ToTable("Credit");
-        }
+        modelBuilder.Entity<Entities.Credit>()
+            .ToTable("Credit");
     }
 }

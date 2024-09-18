@@ -1,9 +1,8 @@
-﻿namespace Acerola.Infrastructure
+﻿namespace Acerola.Infrastructure;
+
+public class AccountNotFoundException : InfrastructureException
 {
-    public class AccountNotFoundException : InfrastructureException
-    {
-        internal AccountNotFoundException(string message)
-            : base(message)
-        { }
-    }
+    internal AccountNotFoundException(string message)
+        : base(message)
+    { }
 }

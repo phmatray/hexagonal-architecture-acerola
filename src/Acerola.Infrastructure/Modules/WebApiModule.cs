@@ -1,12 +1,10 @@
-﻿namespace Acerola.Infrastructure.Modules
-{
-    using Autofac;
+﻿using Autofac;
+
+namespace Acerola.Infrastructure.Modules;
 	
-    public class WebApiModule : Autofac.Module
+public class WebApiModule : Module
+{
+    protected override void Load(ContainerBuilder builder)
     {
-        protected override void Load(ContainerBuilder builder)
-        {
-            
-        }
     }
 }

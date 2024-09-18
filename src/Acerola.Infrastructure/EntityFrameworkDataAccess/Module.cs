@@ -1,29 +1,28 @@
-﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess
+﻿namespace Acerola.Infrastructure.EntityFrameworkDataAccess;
+
+using Autofac;
+using Microsoft.EntityFrameworkCore;
+
+public class Module : Autofac.Module
 {
-    using Autofac;
-    using Microsoft.EntityFrameworkCore;
+    public string ConnectionString { get; set; }
 
-    public class Module : Autofac.Module
+    protected override void Load(ContainerBuilder builder)
     {
-        public string ConnectionString { get; set; }
+        var optionsBuilder = new DbContextOptionsBuilder<DbContext>();
+        optionsBuilder.UseSqlServer(ConnectionString);
+        optionsBuilder.EnableSensitiveDataLogging(true);
 
-        protected override void Load(ContainerBuilder builder)
-        {
-            var optionsBuilder = new DbContextOptionsBuilder<DbContext>();
-            optionsBuilder.UseSqlServer(ConnectionString);
-            optionsBuilder.EnableSensitiveDataLogging(true);
+        builder.RegisterType<Context>()
+            .WithParameter(new TypedParameter(typeof(DbContextOptions), optionsBuilder.Options))
+            .InstancePerLifetimeScope();
 
-            builder.RegisterType<Context>()
-              .WithParameter(new TypedParameter(typeof(DbContextOptions), optionsBuilder.Options))
-              .InstancePerLifetimeScope();
-
-            //
-            // Register all Types in MongoDataAccess namespace
-            //
-            builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
-                .Where(type => type.Namespace.Contains("EntityFrameworkDataAccess"))
-                .AsImplementedInterfaces()
-                .InstancePerLifetimeScope();
-        }
+        //
+        // Register all Types in MongoDataAccess namespace
+        //
+        builder.RegisterAssemblyTypes(typeof(InfrastructureException).Assembly)
+            .Where(type => type.Namespace.Contains("EntityFrameworkDataAccess"))
+            .AsImplementedInterfaces()
+            .InstancePerLifetimeScope();
     }
 }

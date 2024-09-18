@@ -1,64 +1,50 @@
-﻿namespace Acerola.Infrastructure.InMemoryDataAccess.Repositories
+﻿using Acerola.Application.Repositories;
+using Acerola.Domain.Accounts;
+
+namespace Acerola.Infrastructure.InMemoryDataAccess.Repositories;
+
+public class AccountRepository(Context context)
+    : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
 {
-    using System;
-    using System.Linq;
-    using System.Threading.Tasks;
-    using Acerola.Application.Repositories;
-    using Acerola.Domain.Accounts;
-
-    public class AccountRepository : IAccountReadOnlyRepository, IAccountWriteOnlyRepository
+    public async Task Add(Account account, Credit credit)
     {
-        private readonly Context _context;
+        context.Accounts.Add(account);
+        await Task.CompletedTask;
+    }
 
-        public AccountRepository(Context context)
-        {
-            _context = context;
-        }
+    public async Task Delete(Account account)
+    {
+        Account? accountOld = context.Accounts
+            .SingleOrDefault(e => e.Id == account.Id);
 
-        public async Task Add(Account account, Credit credit)
-        {
-            _context.Accounts.Add(account);
-            await Task.CompletedTask;
-        }
+        context.Accounts.Remove(accountOld);
 
-        public async Task Delete(Account account)
-        {
-            Account accountOld = _context.Accounts
-                .Where(e => e.Id == account.Id)
-                .SingleOrDefault();
+        await Task.CompletedTask;
+    }
 
-            _context.Accounts.Remove(accountOld);
+    public async Task<Account?> Get(Guid id)
+    {
+        Account? account = context.Accounts
+            .SingleOrDefault(e => e.Id == id);
 
-            await Task.CompletedTask;
-        }
+        return await Task.FromResult<Account>(account);
+    }
 
-        public async Task<Account> Get(Guid id)
-        {
-            Account account = _context.Accounts
-                .Where(e => e.Id == id)
-                .SingleOrDefault();
+    public async Task Update(Account account, Credit credit)
+    {
+        Account? accountOld = context.Accounts
+            .SingleOrDefault(e => e.Id == account.Id);
 
-            return await Task.FromResult<Account>(account);
-        }
+        accountOld = account;
+        await Task.CompletedTask;
+    }
 
-        public async Task Update(Account account, Credit credit)
-        {
-            Account accountOld = _context.Accounts
-                .Where(e => e.Id == account.Id)
-                .SingleOrDefault();
+    public async Task Update(Account account, Debit debit)
+    {
+        Account? accountOld = context.Accounts
+            .SingleOrDefault(e => e.Id == account.Id);
 
-            accountOld = account;
-            await Task.CompletedTask;
-        }
-
-        public async Task Update(Account account, Debit debit)
-        {
-            Account accountOld = _context.Accounts
-                .Where(e => e.Id == account.Id)
-                .SingleOrDefault();
-
-            accountOld = account;
-            await Task.CompletedTask;
-        }
+        accountOld = account;
+        await Task.CompletedTask;
     }
 }
